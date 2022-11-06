@@ -1,0 +1,12 @@
+*.synctex.gz
+*.pdf
+*.aux
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.toc
+thesis.pdf
+
+.vscode/
