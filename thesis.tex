@@ -242,7 +242,11 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
 
     \section{Further exploration of CrackSeg and Competitors} % maybe this instead of the two below
     \subsection{Class Balancing}
-    While 
+    Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used. [CITE https://ceur-ws.org/Vol-2744/short19.pdf]
+
+    % TODO maybe put the bit of code that does that here
+
+    % TODO Explain how we did class balancing a little bit here
 
     %  \begin{figure*}[hb]
     %     \centering
