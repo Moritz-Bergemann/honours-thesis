@@ -174,7 +174,7 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
     \subsection{Datasets}
     Another key innovation of the paper was the use of a unified dataset to evaluate SC-CrackSeg's performance. As many datasets used to train and evaluate other crack segmentation models are either small or not publicly available, we use a combined dataset of 12 different source crack segmentation datasets, all using the same labelling scheme. Retrieved from Kaggle (TODO LINK), this dataset provided us with 9505 train and 1695 test images. While unorthodox, we find this crack dataset to be exceptionally challenging due to the large variety of image types it contains, from extremely thick to extremely thin cracks, different surfaces, and even samples that do not contain cracks at all (which can be considered testing for false positives). We identify and amend a number of issues in this dataset, and then use it to benchmark a number of existing state-of-the art crack segmentation approaches against SC-CrackSeg.
 
-    \subsection{Results}
+    \subsection{Initial Results}
     We find SC-CrackSeg's combination of efficiency and performance to be highly competitive. Typically mean intersection over union (mIoU) is used to present segmentation results, but crack segmentation is highly unbalanced - focusing on one class (no crack) would skew model results. Therefore, we also assess using F1 score to further take false positives and false negatives across classes into consideration. In terms of pure performance, SC-CrackSeg is actually beaten by other models like DeepCrack. DeepCrack achieves 77.23\% mIoU and 85.49\% mean F1 score, while SC-CrackSeg produces a marginally lower 77.0477\% mIoU and 85.34\% mean F1. However, SC-CrackSeg's focus on efficiency shows its benefits here. SC-CrackSeg is over 12 times smaller and 4 times faster than DeepCrack. DeepCrack possesses 14.7 million parameters (size of weights) and requires 78.8GFlops of computation per prediction, while SC-CrackSeg requires only 1.24 million parameters and 2.8 GFlops. When optimised for performance using Nvidia's TensorRT, SC-CrackSeg achieves a speed of 220 predictions per second.
 
     \begin{table*}[htbp]
@@ -238,15 +238,19 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
         \caption{Efficiency analysis}\label{tab6}
     \end{table*}
     
-        
 
     \section{Further exploration of CrackSeg and Competitors} % maybe this instead of the two below
-    \subsection{Class Balancing}
-    Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used. [CITE https://ceur-ws.org/Vol-2744/short19.pdf]
+    \subsection{Class Balancing and Re-Running of Experiments}
+    Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used. [CITE https://ceur-ws.org/Vol-2744/short19.pdf]. [TALK ABOUT FOCAL TVERSKY]
+
+    Surprisingly, we found no benefits from class balancing when running the experiments for our initial paper. The above inverse frequency balance, hardcoded values, and Focal Tversky Loss were all attempted, though none improved output F1 score, and even reduced it at times. Due to time limitations with the publication, these unpromising results were not fully explored and were ommitted from the final publication. However, during the repetition of these experiments in an environment consistent with subsequent experiments, class balancing was found to have significant impact. [TODO FIGURE]. It is unknown what caused this change, as the original version of the code used to run the experiment is no longer accessible.
 
     % TODO maybe put the bit of code that does that here
+    
+    \subsection{SDDNet}
 
-    % TODO Explain how we did class balancing a little bit here
+
+    \subsection{Modifications to CrackSeg}
 
     %  \begin{figure*}[hb]
     %     \centering
@@ -255,9 +259,6 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
     %     \label{fig:pipeline}
     % \end{figure*}
 
-\section{Modifications to CrackSeg}
-
-\section{New Model Architectures}
     % Talk about SDDNet and modifications made based on SDDNet here
 
 % ------------------------------------------------------------------------------
@@ -274,6 +275,17 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
     \subsection*{Transformers in UDA}
 
     \subsection*{DAFormer}
+
+    While the domain transferability of general vision transformers and state-of-the art performance of segmentation transformers like SegFormer had both been established, there had been no exploration into combining these strengths as of early 2022.
+    The intuition here was that, just as vision transformers outperformed existing domain transfer approaches even with naive exmaples, there was a real possibility that a similar boost of performance could be achieved by segmentation transformers.
+
+    However, there are some differences between the application of domain adaptation in this context compared to in simpler computer vision approaches. For example, the fact that segmentation models output a number of predictions has required adaptations classificiation approaches where only one output is produced [CONSIDER EXPANDING ON THIS].
+
+    An intuitive approach to this problem would be to first apply a model like segformer to domain adaptation, first evaluating its performance in a naive setting (train on source, evaluate on target) and then using an approach tailored to domain adaptation. To avoid having to interact with many of the complexities brought on by moving from a convolutional to transformer architecture, a largely architecture-independent approach proven for segmentation, such as self-training [CITE] may be used. While this was the initial plan for this chapter of the thesis, it was also unfortunately the precise subject of the [MONTH] 2022 paper DAFormer by [AUTHOR] [CITE]. [SPECIFIC DESCRIPTION OF WHAT THEY DID AND HOW THEY DID IT, PLUS THE BONUS STUFF THEY DID LIKE IMAGENET FEATURE DISTANCE]. As I sought to explore novel concepts and approaches, I instead shifted focus onto the other popular means of performing domain adaptation - domain-adversarial training. Domain adversarial approaches were not explored in DAFormer due to the recent success of self-training in other research and the difficulty of implementing domain adversarial methods in segmentation transformers. The challenge comes primarily from the large changes that must be made to the training pipeline (adding a peripheral network with a separate training goal).
+
+    My final training pipeline was built on top of the DAFormer repository (itself built on the MMSegmentation framework). This allowed us to take advantage of the general framework changes necessary for domain adaptation, namely allowing for the input and preprocessing of multiple datasets.
+
+    % TODO some of this should go into methods, the rest should stay here as a more thorough explanation of DAFormer
 
 \section{Methods}
 
