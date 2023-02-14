@@ -102,6 +102,21 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
 \section{Motivation}
 
 \section{Background}
+Semantic segmentation is a core task in computer vision that involves performing classification on every pixel in an input image. Unlike other computer vision tasks such as image classification (identifying which of a set of classes an input image belongs to) or object detection (identifying, classifying, and locating objects in an image), semantic segmentation provides highly dense and semantically rich information, particularly about the shapes objects take up and the intersections between objects.
+    
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{res/cityscapes-segmentation-sample.png}
+    \caption{An example of an annotated semantic segmentation image from the Cityscapes dataset \cite{cordts_cityscapes_2016}. The left is the input to the model, and the right is the expected output.}
+    \label{fig:convolution}
+\end{figure}
+
+Segmentation is a key pre-processing task for many applications. Use in self-driving cars and robotics is most often cited. To safely drive, a self-driving car must be able to identify the shape, course, and edges of the road in front of it rather than only identifying it as a road, for instance. Medical analysis is another key segmentation task that can helps automate the essential task of medical identification and analysis. Many publications focus exclusively on the segmentation of CT or MRI images for medical applications \cite{hesamian_deep_2019}. Other applications include satellite mapping, video surveillance, augmented reality, and domain transformation \cite{richter_enhancing_2021}.
+
+Semantic segmentation is distinguished from other computer vision tasks through its density and computational complexity. Density is key in segmentation as the output is pixel-wise - therefore, a significant amount of information must be known about each pixel in the image to accurately segment it, especially for the boundaries between images. The increase in computational cost is also intuitive. No matter the scenario, generating an output that has the same dimensions as the model input will be more computationally intensive than a classification model that simply outputs a single vector.
+
+As with most computer vision applications, deep convolutional neural networks (CNNs) have traditionally achieved state-of-the-art results on semantic segmentation tasks for accuracy and efficiency. The superior performance of CNNs is often cited to be due to their possession of vision-specific inductive biases. Translational equivariance means that patterns present anywhere in an image will be extracted in the same way due to the constant convolution kernel that “slides” across the input. Locality means that CNNs, due to the limited size of each kernel, will inherently put stronger weights towards input features that are closer together in 2D space (figure ~\ref{fig:receptive_field}) \cite{zhang_dive_2019}. All of this is achieved with fixed-size kernels, meaning the number of parameters that must be trained for any model does not increase with image size. Novel advances in general computer vision are typically first made on the simpler image classification task, then transferred to other tasks like segmentation.
+
 
 \section{Significance}
 
@@ -245,12 +260,35 @@ This thesis has been completed under the supervision of Doctor Sonny Pham and Do
 
     Surprisingly, we found no benefits from class balancing when running the experiments for our initial paper. The above inverse frequency balance, hardcoded values, and Focal Tversky Loss were all attempted, though none improved output F1 score, and even reduced it at times. Due to time limitations with the publication, these unpromising results were not fully explored and were ommitted from the final publication. However, during the repetition of these experiments in an environment consistent with subsequent experiments, class balancing was found to have significant impact. [TODO FIGURE]. It is unknown what caused this change, as the original version of the code used to run the experiment is no longer accessible.
 
+    Given the presence of these changes, I initially re-ran all of our crack segmentation experiments using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3).
+
     % TODO maybe put the bit of code that does that here
     
-    \subsection{SDDNet}
+    \subsection{The Performance of SDDNet}
+    While Tanmay Singha and myself implemented a number of existing crack segmentation models for fair comparison against SC-CrackSet, some could not be completed due to time limitations. Notably, a from-scratch implementation of 2019's SDDNet [CITE] was in development, but could not be completed in time for the final publication. The SDDNet implementation has since been completed and evaluated, and results are surprising: SDDNet, at a similar parameter count and computational efficiency, outperforms all other models tested by a significant margin.
+    
+    SDDNet was introduced in 2019 as a novel design specifically targeting the low class count and large object shapes present in the crack segmentation task while focusing on efficiency. A single-branch encoder-decoder model, SDDNet utilises atrous spacial pyramid pooling and dense skip connections to extract features. Notably, it performs all of its depthwise separable convolutions in recverse, doing pointwise convolution first to initially reduce dimensionality and further reduce computation over the traditional method. While not explicitly stated, we intuit that the reduced channel resolution from performing depthwise first is not as significant in a low-class task like crack segmentation, where the feature space is semantically sparse compared to other tasks. It also removes the global average pooling component of its Atrous Spacial Pyramid Module as it was found to stronlgy regularise, detrimental to a low-parameter model.
+
+    SDDNet is primarily made up of DenSep modules, which consist of repeated reverse DSConv operations. The output of each opearation is then fed into the input of all subsequent ones, permitting a large amount of feature extraction while keeping the number of channels very low, and thus computation extremely efficient. The authors found that, in terms of multiplications done, the DenSep module reduces computing cost by over 70\% an approach using traditional convolutions.
+
+    Finally, SDDNet's decoder upsamples input features in two stages. SCMNet identified that multi-stage upsampling was, while more computationally expensive, significantly more effective than a single upsample \cite{singha2021scmnet}. It's use reduces the amount of boundary degeneration as each upsample individually applies smoothing. SDDNet however also applies reverse separable convolutions between upsamples, allowing for further boundary refinement before performing further upsampling.
 
 
     \subsection{Modifications to CrackSeg}
+
+    Based on the strong performance of a simple model like SDDNet, we hypothesised that SC-CrackSeg's could be optimised further towards the crack segmentation task. Therefore, we experimented with our architecture, seeking to take into consideration many of the design choices made in successful models like SDDNet. 
+
+    I started my model development with a naive intuition: SC-CrackSeg's issues were caused by a lack of direct adaptation to the crack segmentation scenario - the model was too deep and too low-resolution. Two things have been identified throughout the review of crack segmentation - output quality depends on high-resolution [SOURCE], and the actual act of class distinguishing is simple relative to other tasks [SOURCE]. The intuition was that decreasing the amount of downsampling done by the model would improve the granularity of produced features, while reducing the number of channels would counteract the performance cost of this operation while only minimally affecting results as performance as less channel depth was required for the crack segmentation task in the first place. However, experiments showed the problem was not that simple. Increasing resolution immediately became prohibitively expensive in terms of performance, while decreasing channels significantly (to a maximum of 64) destroyed model performance.
+
+    Upon these initial failures, we instead explored a more nuanced approach to the intuitions. By placing more of the model's focus on the shallow branch, we could 
+
+    [SOMETHING SOMETHING ABOUT THE SECOND MODEL HERE]
+    
+    Now talk about:
+    - Adding SDDNet blocks etc
+    - How we don't need pyramid pooling because we have a much more advanced deep branch
+        - And already have far more granular
+    - Adding the skip connection
 
     %  \begin{figure*}[hb]
     %     \centering
