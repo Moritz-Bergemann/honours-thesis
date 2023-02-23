@@ -284,7 +284,7 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
             \hline
                                                               &                & \multicolumn{3}{|c|}{\textbf{IoU}} & \multicolumn{3}{|c|}{\textbf{F1 score}} & \multicolumn{3}{|c|}{\textbf{Precision}} & \multicolumn{3}{|c|}{\textbf{Recall}}                                                                                                      \\
             \hline
-            {Model}                                           & {Accuracy}     & {BG}                               & {Crack}                                 & {mIoU}                                   & {BG}                                  & {Crack} & {mF1}          & {BG}    & {Crack} & {aP}           & {BG}    & {Crack} & {aR}           \\
+            {Model}                               u           & {Accuracy}     & {BG}                               & {Crack}                                 & {mIoU}                                   & {BG}                                  & {Crack} & {mF1}          & {BG}    & {Crack} & {aP}           & {BG}    & {Crack} & {aR}           \\
             \hline
             {DeepLab \cite{chen_encoder-decoder_2018}}        & {98.43}        & {98.50}                            & {52.28}                                 & {75.39}                                  & {99.24}                               & {68.66} & {83.95}        & {98.97} & {79.25} & {89.11}        & {99.52} & {60.57} & {80.05}        \\
             \hline
@@ -341,34 +341,75 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
 
 \section{Further exploration of CrackSeg and Competitors} % maybe this instead of the two below
 \subsection{Class Balancing and Re-Running of Experiments}
-Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used. [CITE https://ceur-ws.org/Vol-2744/short19.pdf]. [TALK ABOUT FOCAL TVERSKY]
+Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used \cite{kochkarev_data_2020}. We also assessed Focal Tversky loss \cite{abraham_novel_2018}, but found it increased boundary degeneration between crack and non-crack classes.
 
 Surprisingly, we found no benefits from class balancing when running the experiments for our initial paper. The above inverse frequency balance, hardcoded values, and Focal Tversky Loss were all attempted, though none improved output F1 score, and even reduced it at times. Due to time limitations with the publication, these unpromising results were not fully explored and were ommitted from the final publication. However, during the repetition of these experiments in an environment consistent with subsequent experiments, class balancing was found to have significant impact. [TODO FIGURE]. It is unknown what caused this change, as the original version of the code used to run the experiment is no longer accessible.
 
-Given the presence of these changes, I initially re-ran all of our crack segmentation experiments using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3).
-
-% TODO maybe put the bit of code that does that here
+Given the presence of these changes, I initially re-ran all of our final crack segmentation experiments using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
 
 \subsection{The Performance of SDDNet}
-While Tanmay Singha and myself implemented a number of existing crack segmentation models for fair comparison against SC-CrackSet, some could not be completed due to time limitations. Notably, a from-scratch implementation of 2019's SDDNet [CITE] was in development, but could not be completed in time for the final publication. The SDDNet implementation has since been completed and evaluated, and results are surprising: SDDNet, at a similar parameter count and computational efficiency, outperforms all other models tested by a significant margin.
+While Tanmay Singha and myself implemented a number of existing crack segmentation models for fair comparison against SC-CrackSet, some could not be completed due to time limitations. Notably, a from-scratch implementation of 2019's SDDNet \cite{choi_sddnet_2019} was in development, but could not be completed in time for the final publication. The SDDNet implementation has since been completed and evaluated, and results are surprising: SDDNet, at a similar parameter count and computational efficiency, outperforms all other models tested by a significant margin.
 
 SDDNet was introduced in 2019 as a novel design specifically targeting the low class count and large object shapes present in the crack segmentation task while focusing on efficiency. A single-branch encoder-decoder model, SDDNet utilises atrous spacial pyramid pooling and dense skip connections to extract features. Notably, it performs all of its depthwise separable convolutions in recverse, doing pointwise convolution first to initially reduce dimensionality and further reduce computation over the traditional method. While not explicitly stated, we intuit that the reduced channel resolution from performing depthwise first is not as significant in a low-class task like crack segmentation, where the feature space is semantically sparse compared to other tasks. It also removes the global average pooling component of its Atrous Spacial Pyramid Module as it was found to stronlgy regularise, detrimental to a low-parameter model.
 
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{res/sddnet-densep-module.png}
+    \caption{SDDNet's \cite{choi_sddnet_2019} DenSep module. The number of channels maintained throughout the module is constant, though depth is periodically increased through concatenation and skip connections.}
+    \label{fig:densep-module}
+\end{figure}
+
 SDDNet is primarily made up of DenSep modules, which consist of repeated reverse DSConv operations. The output of each opearation is then fed into the input of all subsequent ones, permitting a large amount of feature extraction while keeping the number of channels very low, and thus computation extremely efficient. The authors found that, in terms of multiplications done, the DenSep module reduces computing cost by over 70\% an approach using traditional convolutions.
 
-Finally, SDDNet's decoder upsamples input features in two stages. SCMNet identified that multi-stage upsampling was, while more computationally expensive, significantly more effective than a single upsample \cite{singha_scmnet_2021}. It's use reduces the amount of boundary degeneration as each upsample individually applies smoothing. SDDNet however also applies reverse separable convolutions between upsamples, allowing for further boundary refinement before performing further upsampling.
-
-
+Finally, SDDNet's decoder upsamples input features in two stages, applying a skip connection from early in the model (when features were high resolution) combined with separable convolutions between the upsamples. This aids in the refinement of feature boundaries before they are upsampled further. SCMNet identified that multi-stage upsampling was, while more computationally expensive, significantly more effective than a single upsample \cite{singha_scmnet_2021}. SC-CrackSeg uses a similar approach to SDDNet, upsampling multiple times using skip connections from previous positions in the model. However, SC-CrackSeg downsamples far more than SDDNet, and only performs skip connections during the lower-resolution stages of upsampling.
+% TODO add more figures, add quant analysis figures 
 \subsection{Modifications to CrackSeg}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/crack-experiment-diagrams/legend.pdf}
+        \label{fig:sc-crackseg-versions-legend}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6964\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/crack-experiment-diagrams/sc-crackseg.pdf}
+        \caption{SC-CrackSeg}
+        \label{fig:sc-crackseg-versions-sc-crackseg}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6964\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/crack-experiment-diagrams/sddnet.pdf}
+        \caption{SDDNet}
+        \label{fig:sc-crackseg-versions-sddnet}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6964\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/crack-experiment-diagrams/sc-crackseg-densep-skip.pdf}
+        \caption{SC-CrackSeg with DenSep and skip connection}
+        \label{fig:sc-crackseg-versions-sc-crackseg-densep-skip}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6964\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{res/crack-experiment-diagrams/sc-crackseg-densep-upsample.pdf}
+        \caption{SC-CrackSeg with DenSep and upsampled shallow branch}
+        \label{fig:sc-crackseg-versions-sc-crackseg-densep-upsample}
+    \end{subfigure}
+
+    \caption{Diagrams representing significant architectures during experimentation.}
+    \label{fig:sc-crackseg-versions}
+\end{figure}
 
 Based on the strong performance of a simple model like SDDNet, we hypothesised that SC-CrackSeg could be optimised further towards the crack segmentation task. Therefore, we experimented with our architecture, seeking to take into consideration many of the design choices made in successful models like SDDNet.
 
 I started my model development with a naive intuition: SC-CrackSeg's issues were caused by a lack of direct adaptation to the crack segmentation scenario - the model was too deep and too low-resolution. Two things have been identified throughout the review of crack segmentation - output quality depends on high-resolution [SOURCE], and the actual act of class distinguishing is simple relative to other tasks [SOURCE]. The intuition was that decreasing the amount of downsampling done by the model would improve the granularity of produced features, while reducing the number of channels would counteract the performance cost of this operation while only minimally affecting results as performance as less channel depth was required for the crack segmentation task in the first place. However, experiments showed the problem was not that simple. Increasing resolution immediately became prohibitively expensive in terms of performance, while decreasing channels significantly (to a maximum of 64) destroyed model performance.
 
-Upon these initial failures, I instead explored a more nuanced approach to the intuitions. I designed iterations of SC-CrackSeg that place model's focus on the shallow branch while minimising the effect on the deep branch wherever possible.
+Upon these initial failures, I instead explored a more nuanced approach to the intuitions. I designed iterations of SC-CrackSeg that place model's focus on the shallow branch while minimising the effect on the deep branch wherever possible. Unfortunately, I found any approach increasing shallow network convolution resolution to be unfeasible when combined with the deep branch, and also found simply increasing the number of convolutions in the shallow branch had minimal effect on model performance.
 
-Inspired by SDDNet's downsampling-free DenSep modules, I replaced all shallow branch blocks with deep branch blocks [FIGURE]. The concatenation-based approach to feature extraction allows feature resolution to be maintained in the deep branch (where it is most essential) while minimising the downsampling done, as DenSep modules only downsample in their final block [FIGURE]. An initial model with only these changes achieved promising results [TABLE]. An issue with the approach, however, is that since the deep and shallow branches share information, their dimensions must periodically match at the 3 information sharing points in the model, forcing the shallow branch to be downsampled further than in SDDNet. This this is likely to reduce output granularity. I first addressed this by adjusting the information sharing system. Information would only be shared from the deep to the shallow branch, and the shallow branch would downsample less and possess less channels to counteract computing costs. Information sharing could then occur by reducing the deep branch's channels via pointwise convolution and then upsampling. [WRITE ABOUT THE FULL RESULTS HERE].
-Another approach assessed was to consider the significance of the gradual upsampling skip connection in SDDNet. While our model already possesses a number of skip-like connections and gradual upsampling, these largely occur to increase from lower resolutions, and are still followed by an $8 \times$ upsample. Therefore, we added a further skip connection with the early parts of the model before final output is computed. The skip connection features were initially resolved with the decoder features using another SA module as with the other skip connections in the model, but we found this to degrade performance (perhaps as the SA module failed to produce fine output at the highest resolutions). Replacing the SA module with a simple depthwise separable convolution resolved these issues. This approach was most successful, and while multiple variations were assessed, any increase in complexity (introducing upsamples or adding further skip connections) seemed to decrease model stability and quickly cause overfitting issues. Even so, our final model outperforms SDDNet in assessment while possessing a significantly lower number of flops and parameters.% TODO CHECK WHAT I SAID ABOUT THE SA MODULE BEING BAD HERE % ALSO CHECK THAT PARAMETERS ARE ACTUALLY LOWER
+Inspired by SDDNet, I replaced all shallow branch blocks with DenSep modules (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-skip}). The concatenation-based approach to feature extraction allows feature resolution to be maintained in the deep branch (where it is most essential) while minimising the downsampling done, as DenSep modules only downsample in their final block (\autoref{fig:densep-module}). An initial model with only these changes achieved promising results. An issue, however, is that since the deep and shallow branches share information, their dimensions must periodically match at the 3 information sharing points in the model, forcing the shallow branch to be downsampled further than in SDDNet. This this is likely to reduce output granularity. I first addressed this by adjusting the information sharing system. Information would only be shared from the deep to the shallow branch, and the shallow branch would downsample less and possess less channels to counteract computing costs. Information sharing could then occur by reducing the deep branch's channels via pointwise convolution and then upsampling. These combined results produced one of our final architectures (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-upsample}).
+
+Another consideration was the significance of the gradual upsampling skip connection in SDDNet. While SC-CrackSeg already possesses a number of skip-like connections and gradual upsampling, these largely occur to increase from lower resolutions, and are still followed by an $8 \times$ upsample. Therefore, we added a further skip connection with the early parts of the model before final output is computed. The skip connection features were initially resolved with the decoder features using another SA module as with the other skip connections in the model, but we found this to degrade performance (perhaps as the SA module failed to produce fine output at the highest resolutions). Replacing the SA module with a simple depthwise separable convolution resolved these issues. This approach was most successful, and while multiple variations were assessed, any increase in complexity (introducing upsamples or adding further skip connections) seemed to decrease model stability and quickly cause overfitting issues. Even so, our final model outperforms SDDNet in assessment while possessing a significantly lower number of flops and parameters.% TODO CHECK WHAT I SAID ABOUT THE SA MODULE BEING BAD HERE % ALSO CHECK THAT PARAMETERS ARE ACTUALLY LOWER
 
 % ALSO ADD we were able to get fine crack details (the little gap) that none of the previous models could
 
@@ -376,19 +417,54 @@ Another approach assessed was to consider the significance of the gradual upsamp
 
 Even though our best approaches introduced SDDNet's DenSep module, we notably did not borrow another core feature - the final ASPP stage. This is as SC-CrackSeg already possesses high-quality global context refinement via its depp branch, which aggregates global context through repeated downsampling and then merges these with the more fine features.
 
-    [SOMETHING SOMETHING ABOUT THE SECOND MODEL HERE]
+\subsection{Experiment Results}
 
+Only some of the above experimental models were assessed. All models were trained to 300 epochs on the custom combined crack dataset.
 
-%  \begin{figure*}[hb]
-%     \centering
-%     \includegraphics[width=\textwidth, height=5.5cm]{CrackSeg-pipeline.eps}
-%     \caption{Complete architecture of SC-CrackSeg}
-%     \label{fig:pipeline}
-% \end{figure*}
+For brevity, the following terms will describe SC-CrackSeg modifications:
+\begin{itemize}
+    \item \textbf{SC-CrackSeg-1}: Less downsampling and max channels of 64
+    \item \textbf{SC-CrackSeg-2}: Less deep branch blocks and more shallow branch blocks
+    \item \textbf{SC-CrackSeg-3}: Replace shallow branch blocks with DenSep module, add skip connection (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-skip})
+    \item \textbf{SC-CrackSeg-4}: Replace shallow branch blocks with DenSep module, keep deep branch shallower and combine with deep branch via upsamples (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-upsample})
+\end{itemize}
 
+\begin{table*}[htbp]
+    \begin{adjustbox}{width=\columnwidth,center}
+        \begin{tabular}{|p{0.2\textwidth}|c|c|c|c|c|c|c|c|}
+            \hline
+                                                & \textbf{Unet} & \textbf{SDDNet} & \textbf{SC-CrackSeg} & \textbf{SCMNet} & \textbf{SC-CrackSeg-1} & \textbf{SC-CrackSeg-2} & \textbf{SC-CrackSeg-3} & \textbf{SC-CrackSeg-4} \\
+            \hline
+            \textbf{Parameters}                 & 0.35M         & \textbf{0.33M}  & 1.27M                & 1.26M           & 0.63M                  & 1.01M                  & 1.51M                  & 1.3M                   \\
+            \hline
+            \textbf{Flops}                      & 2.44M         & 2.75M           & 1.4M                 & 1.62M           & 18.12M                 & \textbf{1.24M}         & 2.16M                  & 4.32M                  \\
+            \hline
+            \textbf{Crack Test Set Performance} & 0.796         & \textbf{0.815}  & 0.807                & 0.81            & 0.63                   & 0.808                  & 0.812                  & 0.803                  \\
+            \hline
+        \end{tabular}
+    \end{adjustbox}
+    \caption{Performance evaluation of modifications (and SDDNet) on Crack Test set.}%\label{tab5}
+\end{table*}
 
+SC-CrackSeg 1 achieved extremely poor results, and was highly prone to overfitting. Removing even 2 downsamples early in the model also massively increased the number of parameters, making this model too complex for the crack segmentation task and seemingly not permitting proper receptive field. SC-CrackSeg-2 was significantly more successful, instead focusing on the shallow branch by putting more convolutional focus here. Thi smodel achieves performance competitive to the original SC-CrackSeg model while possessing significantly fewer parameters and flops. Sc-CrackSeg-3 achieves the strongest results out of our models, and achieves a strong balance between performance and cost. While SC-CrackSeg-4 achieved promising results, performing repeated upsamples significantly increases the model parameters. Ultimately, SDDNet achieves the strongest qualitative results, and does so with far fewer parameters than other models - a testament to the success of simple designs in the crack segmentation space. However, it possesses greater flops than our SC-CrackSeg implementations, affecting prediction time.
+
+\begin{figure}[htbp]
+    \begin{tabular}{ccc}
+        \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg.pdf}   & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sddnet.pdf}        & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-2.pdf} \\
+        \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-3.pdf} & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-3.pdf} & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-4.pdf} \\
+    \end{tabular}
+    \caption{Train and test curves for SC-CrackSeg variations. Note the increased stability in models with DenSep modules (SDDNet, SC-CrackSeg-3, SC-CrackSeg-4).}
+\end{figure}
+
+Model stability also varied, with many models, especially SC-CrackSeg-2, often dropping in quality erratically. The introduction of the DenSep module appaeared to make models generally more stable. The larger models were, as expected, also more prone to overfitting.
+
+Qualitative analysis revealed something interesting - SC-CrackSeg-3 is the only model out of all tested so far capable of accurately segmenting specific crack boundaries. While this performance does not appear to lead to major quantitative gains, but the distinction between "one crack" and "two cracks" could be significant in application context. SC-CrackSeg-3 may have this capability due to the enhanced global perspective provided by the deep branch and skip connections compared to SDDNet combined with the high-resolution detail provided by the skip connection.
+
+Class balancing again achieved mixed success. While it initially appeared to have significant impact on performance, these were not consistent across experiments and random seeds. In fact, class imbalanced seemed to harm model performance in some areas, causing finely detailed crack segments to merged into a single large body [FIGURE]. High class imbalance specifically seemed to reduce model performance significantly.
 
 \subsection*{Conclusions}
+
+While convential wisdom often states the strongest machine learning architectures are general, crack segmentation is an interesting example of a scenario where specifically tuned architectures can be significant. SC-CrackSeg and it's subsequent versions produced make select sacrifices in areas minimally impactful towards performance and applies specific optimisations for the crack segmentation task. However, many of the initial assumptions of the research were also contradicted.
 
 Write about
 - Increasing complexity from our model introduces overfitting - maybe due to the high depth (since we are based off of an architecture for a different task)
