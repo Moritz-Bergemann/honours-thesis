@@ -446,7 +446,7 @@ SC-CrackSeg 1 achieved extremely poor results, and was highly prone to overfitti
 
 \begin{figure}[htbp]
     \begin{tabular}{ccc}
-        \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg.pdf}   & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sddnet.pdf}        & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/scmnet.pdf} \\
+        \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg.pdf}   & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sddnet.pdf}        & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/scmnet.pdf}        \\
         \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-2.pdf} & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-3.pdf} & \includegraphics[width=0.3\textwidth]{res/crack-experiments-training-curves/sc-crackseg-4.pdf} \\
     \end{tabular}
     \caption{Train and test curves for SC-CrackSeg variations. Note the increased stability in models with DenSep modules (SDDNet, SC-CrackSeg-3, SC-CrackSeg-4).}
@@ -454,7 +454,64 @@ SC-CrackSeg 1 achieved extremely poor results, and was highly prone to overfitti
 
 Model stability also varied, with many models, especially SC-CrackSeg-2, often dropping in quality erratically. The introduction of the DenSep module appaeared to make models generally more stable. The larger models were, as expected, also more prone to overfitting.
 
-Qualitative analysis further details regarding the models - only SDDNet and SC-CrackSeg-3 are capable of accurately segmenting specific crack boundaries. This performance does not appear to lead to major quantitative gains, but the distinction between "one crack" and "two cracks" could be significant in application context. SC-CrackSeg-3 may have this capability due to the enhanced global perspective provided by the deep branch and skip connections compared to SDDNet combined with the high-resolution detail provided by the skip connection, similarly to SDDNet.
+Qualitative analysis revealed something interesting - only SDDNet and SC-CrackSeg-3 are capable of accurately segmenting specific crack boundaries. This performance does not appear to lead to major quantitative gains, but the distinction between "one crack" and "two cracks" could be significant in application context. SC-CrackSeg-3 may have this capability due to the enhanced global perspective provided by the deep branch and skip connections compared to SDDNet combined with the high-resolution detail provided by the skip connection, similarly to SDDNet.
+
+
+\begin{figure}[htbp]
+    \begin{tabular}{cccc}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/source.jpg}
+            \caption{Source}
+            \label{fig:crackseg-experiment-qualitative-source}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/ground-truth.png}
+            \caption{Ground Truth}
+            \label{fig:crackseg-experiment-qualitative-ground-truth}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/sddnet.png}
+            \caption{SDDNet}
+            \label{fig:crackseg-experiment-qualitative-sddnet}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/unet.png}
+            \caption{U-Net}
+            \label{fig:crackseg-experiment-qualitative-unet}
+        \end{subfigure}
+        \\
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/sc-crackseg-1.png}
+            \caption{SC-CrackSeg-1}
+            \label{fig:crackseg-experiment-qualitative-sc-crackseg-1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/sc-crackseg-2.png}
+            \caption{SC-CrackSeg-2}
+            \label{fig:crackseg-experiment-qualitative-sc-crackseg-2}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/sc-crackseg-3.png}
+            \caption{SC-CrackSeg-3}
+            \label{fig:crackseg-experiment-qualitative-sc-crackseg-3}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.23\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{res/crackseg-experiment-qualitative/sc-crackseg-4.png}
+            \caption{SC-CrackSeg-4}
+            \label{fig:crackseg-experiment-qualitative-sc-crackseg-4}
+        \end{subfigure}
+    \end{tabular}
+    \caption{Qualitative comparison of models on crack test set, displaying SC-CrackSeg-3 and SDDNet's ability to more finely segment crack components while maintaining quality.}
+    \label{}
+\end{figure}
 
 Class balancing again achieved mixed success. While it initially appeared to have significant impact on performance, these were not consistent across experiments and random seeds. In fact, class imbalanced seemed to harm model performance in some areas, causing finely detailed crack segments to merged into a single large body [FIGURE]. High class imbalance specifically seemed to reduce model performance significantly.
 
