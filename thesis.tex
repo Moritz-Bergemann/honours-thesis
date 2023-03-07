@@ -536,7 +536,14 @@ Ultimately, we introduce a number of competitive crack segmentation architecture
 
 \section{Background}
 
-\subsection*{Transformers for Semantic Segmentation}
+% TODO consider moving this section here from the very beginning (THEN ALSO CONSIDER MOVING FAST SEMANTIC SEGMETNATION TO THE FIRST CHAPTER AND FAST TRANSFORMER TO WHAT WILL PROBABLY BE THE LAST). Maybe also add like a "see section X.X for context"
+% \subsection*{Transformers for Semantic Segmentation}
+
+\subsection{Unsupervised Domain Adaptation}
+Unsupervised Domain Adaptation (UDA) fundamentally seeks to address the lack of large amounts of high-quality training data for machine learning tasks. A subset of transfer learning, domain adaptaion explores how to transfer knowledge learned on a labelled source domain to an unlabeled target domain, where the two domains possess the same label space but contain a domain shift. This shift may be small (e.g. one city to another) or large (synthetic to real data). Formally, consider a source dataset $D_S$ consisting of inputs $X_S$ and labels $Y_S$ as samples from an overall distribution $P_S$. Similarly, a target set $D_T$ consists of images $X_T$ from a distribution $P_T$. Critically, the labels, $Y_T$, are not available. Due to the domain shift between the datasets, we can intuit $P_T \neq P_S$, bu that  $P_S$ will be a strong starting point for learning $P_T$ due to the similarity of the domains. UDA, then, involves strategies for moving from $P_S$ to $P_T$ \cite{wilson_survey_2020}, unsupervised labels for our true desired target $P_T$ are not available.
+
+Many fundamentally different approaches to domain adaptation exist
+
 
 \subsection*{UDA for Semantic Segmentation}
 
@@ -544,7 +551,7 @@ Ultimately, we introduce a number of competitive crack segmentation architecture
 
 \subsection*{DAFormer}
 
-While the domain transferability of general vision transformers and state-of-the art performance of segmentation transformers like SegFormer had both been established, there had been no exploration into combining these strengths as of early 2022.
+The domain transferability of general vision transformers and the state-of-the art performance of segmentation transformers like SegFormer had both been established by early 2022. However, there had been no exploration into combining these strengths.
 The intuition here was that, just as vision transformers outperformed existing domain transfer approaches even with naive exmaples, there was a real possibility that a similar boost of performance could be achieved by segmentation transformers.
 
 However, there are some differences between the application of domain adaptation in this context compared to in simpler computer vision approaches. For example, the fact that segmentation models output a number of predictions has required adaptations classificiation approaches where only one output is produced [CONSIDER EXPANDING ON THIS].
