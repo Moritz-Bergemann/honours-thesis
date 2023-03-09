@@ -429,15 +429,15 @@ For brevity, the following terms will describe SC-CrackSeg modifications:
     \begin{adjustbox}{width=\columnwidth,center}
         \begin{tabular}{|p{0.2\textwidth}|c|c|c|c|c|c|c|c|}
             \hline
-                                                & \textbf{Unet} & \textbf{SDDNet} & \textbf{SC-CrackSeg} & \textbf{SCMNet} & \textbf{SC-CrackSeg-1} & \textbf{SC-CrackSeg-2} & \textbf{SC-CrackSeg-3} & \textbf{SC-CrackSeg-4} \\
+                                                & \textbf{Unet}  & \textbf{SDDNet} & \textbf{SC-CrackSeg} & \textbf{SCMNet} & \textbf{SC-CrackSeg-1} & \textbf{SC-CrackSeg-2} & \textbf{SC-CrackSeg-3} & \textbf{SC-CrackSeg-4} \\
             \hline
-            \textbf{Parameters}                 & 0.35M         & \textbf{0.33M}  & 1.27M                & 1.26M           & 0.63M                  & 1.01M                  & 1.51M                  & 1.3M                   \\
+            \textbf{Parameters}                 & 0.35M          & \textbf{0.33M}  & 1.27M                & 1.26M           & 0.63M                  & 1.01M                  & 1.51M                  & 1.3M                   \\
             \hline
-            \textbf{Flops}                      & 2.44M         & 2.75M           & 1.4M                 & 1.62M           & 18.12M                 & \textbf{1.24M}         & 2.16M                  & 4.32M                  \\
+            \textbf{Flops}                      & 2.44M          & 2.75M           & 1.4M                 & 1.62M           & 18.12M                 & \textbf{1.24M}         & 2.16M                  & 4.32M                  \\
             \hline
-            \textbf{Crack Test Set Performance} & 0.796         & \textbf{0.815}  & 0.807                & 0.81            & 0.63                   & 0.808                  & 0.812                  & 0.803                  \\
+            \textbf{Crack Test Set Performance} & 0.796          & \textbf{0.815}  & 0.807                & 0.81            & 0.63                   & 0.808                  & 0.812                  & 0.803                  \\
             \hline
-            \textbf{FPS} & \textbf{27.05}         & 15.84           & 15.94                & 16.87           & 12.75                  & 15.87                  & 14.01                  & 13.15                  \\
+            \textbf{FPS}                        & \textbf{27.05} & 15.84           & 15.94                & 16.87           & 12.75                  & 15.87                  & 14.01                  & 13.15                  \\
             \hline
         \end{tabular}
     \end{adjustbox}
@@ -542,12 +542,22 @@ Ultimately, we introduce a number of competitive crack segmentation architecture
 \subsection{Unsupervised Domain Adaptation}
 Unsupervised Domain Adaptation (UDA) fundamentally seeks to address the lack of large amounts of high-quality training data for machine learning tasks. A subset of transfer learning, domain adaptaion explores how to transfer knowledge learned on a labelled source domain to an unlabeled target domain, where the two domains possess the same label space but contain a domain shift. This shift may be small (e.g. one city to another) or large (synthetic to real data). Formally, consider a source dataset $D_S$ consisting of inputs $X_S$ and labels $Y_S$ as samples from an overall distribution $P_S$. Similarly, a target set $D_T$ consists of images $X_T$ from a distribution $P_T$. Critically, the labels, $Y_T$, are not available. Due to the domain shift between the datasets, we can intuit $P_T \neq P_S$, bu that  $P_S$ will be a strong starting point for learning $P_T$ due to the similarity of the domains. UDA, then, involves strategies for moving from $P_S$ to $P_T$ \cite{wilson_survey_2020}, unsupervised labels for our true desired target $P_T$ are not available.
 
-Many fundamentally different approaches to domain adaptation exist
+Many fundamentally different approaches to domain adaptation exist. Two in particular have become relevant to semantic segmentation: domain-adversarial learning and self-training. Domain adversarial learning is a subset of domain invariant feature learning \cite{wilson_survey_2020}, a UDA approach based on the intuition that a model will be most successful operating on features similar to those it was trained on. In other words, this UDA approach improves performance by encouraging the model to produce features from the target set similar to those in the source set. This is usually achieved by adding another parameter to the model loss, such as the statistical distance between the source and target model's feature distributions \cite{gretton_kernel_2006} \cite{sun_return_2015}. Recently, many publications instead implement an adversarial \cite{goodfellow_generative_2014} approach. One model is trained on the source/target dataset tasks, while another, the discriminator, takes features from the former as input and is trained to classify whether the features belong to the source or target dataset. The discriminator's loss is then negated and added to the original model's loss, training it to "trick" the discriminator. The intuition here is that producing source and target features that a neural network cannot distinguish is a more effective means of ensuring their similarity than traditional distances. This approach is known as domain adversarial learning \cite{ganin_domain-adversarial_2016}.
 
+Self-training, or pseudo-labelling, is another common approach. It's intuition is that the highest quality, most "confident" predictions made by a source-trained model on target data will provide more valuable than non-valuable knowledge to the model \cite{wilson_survey_2020} \cite{kamnitsas_transductive_2021}. In essence, the source-trained model makes predictions on target samples, the most confident of these predictions - known as pseudo-labels - are added to the training set, and the cycle is repeated. How the confidence of a model is determined varies. Some studies use ensemble approaches, though many semantic segmentation techniques use the magnitude of a model's softmax output as a measure of confidence, where a greater softmax value is a more confident prediction \cite{zou_domain_2018}.
+
+% TODO add example image explaining domain adversarial training 
 
 \subsection*{UDA for Semantic Segmentation}
 
-\subsection*{Transformers in UDA}
+Both domain adversarail and self-training approaches have been applied to semantic segmentation, but must be adjusted due to the increased complexity of dense prediction. It is also critical to consider that semantic segmentation requires many predictions to be made per input, rather than a single one as in classification. \cite{hoffman_fcns_2016} was first in domain adversarial approaches, using FCN with a discriminator that took in feature space in "patches", where each patch represented the size of the model's receptive field. It was found passing all dense features to the discriminator simultaneously marginalised fine-grained detail in output predictions. This was combined with a class-wise approach to maintain class distribution. \cite{tsai_learning_2020} use an output-level discriminator combined with multiple feature-level discriminators, intuiting that the complex output space of segmentation should look similar between appraoches. \cite{wang_classes_2020} apply a fine-grained discriminator that produces class-wise logits to encourage the model to effectively transfer each class.
+
+Self-training approaches have produced many state-of-the art results. Many contributions were made in \cite{zou_domain_2018}, who apply pseudo-labelling to segmentation by masking out (making the model ignore) all but the $r\%$ most confident correct pixel predictions in each image. Confidence is smeasured using softmax magnitude. A scheduling system is introduced to gradually increase $r$ as target predictions become more reliable. Class-balancing is also introduced to counteract the domination of easy-to-predict classes. ADVENT \cite{vu_advent_2019} found focusing training on low-confidence regions could boost performance, and \cite{li_bidirectional_2019} combines pseudolabelling with GAN image translation.
+% TODO READ DACS FOR CHAPTER 3 AND WRITE ABOUT IT HERE
+
+\subsection*{Vision Transformers in UDA}
+
+Transformers are known to have extremely strong transfer learning capabilities \cite{radford_language_2019} \cite{wright_transformer_2020}. This extends to vision, where ViT \cite{dosovitskiy_image_2021} and SETR \cite{zheng_rethinking_2021} identified the effectiveness of pre-training on a large dataset like ImageNet before adapting to labelled segmentation data. Transferrable Vision Transformer (TVT) \cite{yang_tvt_2021} was the first to explore the domain adaptation abilities of vision transformers specifically, but did so in the classification space using ViT. It was found that ViT's zero-shot transferrability outperformed many state-of-the-art CNN-based techniques for domain adaptation. This was built on using an adversarial patch-wise discriminator that de-emphasises easy-to-disciminate patch weights, combined with a loss that maximises feature clustering \cite{chapelle_semi-supervised_2005}. Patch-wise feature alignment was also applied in \cite{wang_exploring_2021} for object detection.
 
 \subsection*{DAFormer}
 
@@ -571,7 +581,7 @@ My final training pipeline was built on top of the DAFormer repository (itself b
 % ------------------------------------------------------------------------------
 % Cross-Attention in Segmentation
 % ------------------------------------------------------------------------------
-\chapter{Cross-Attention in Segmentation}
+\chapter{Cross-Attention in Segmentation - alternatively - Efficient domain adaptation with lightweight transformers}
 
 
 \FloatBarrier
