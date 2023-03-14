@@ -25,6 +25,37 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{cleveref}
+\usepackage[bottom]{footmisc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% ********
+% For code style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 % ******************
 \begin{document}{}
@@ -213,20 +244,13 @@ SETR demonstrated the capacity of transformers in segmentation, but was limited 
 
 \section{Background}
 % \subsection{Semantic Segmentation}
-% Semantic segmentation is a fundamental research area in computer vision.
-% It involves the assignment of pixel-wise labels to an image, providing high-fidelity details about the image contents. Semantic segmentation is computationally expensive compared to other fundamental computer vision tasks, due to the dense feature maps required for accurate pixel-wise segmentation. Efficient semantic segmentation is an active area of research, investigating architectures that can improve efficiency while mitigating losses in performance. 
-% Early approaches such as E-Net \cite{paszke_enet_2016} focused on lowering the resolution of features within the model, though this particularly affected the segmentation quality of fine boundaries. 
-% Recent approaches have improved the performance by denoting different components of the segmentation task to different branches of the model ICNet \cite{zhao2018icnet}. 
-% Fine, high-resolution features are extracted with a low number of kernel filters (known as the deep branch), while low-resolution features are extracted with more filters (known as the shallow branch). This approach means high-level global features requiring many channels, such as object positions, can be computed at low resolution, while low-level local features, such as object boundaries, can be computed at high resolution. Both can be computed without excessive computational cost, and can then be merged to achieve both accurate and high-resolution segmentation. 
-% BiSeNet \cite{yu2018bisenet} identified two such branches, one deep and one shallow, as being most efficient. ContextNet \cite{poudel2018contextnet} maintains this overall architecture while introducing depthwise separable convolutions \cite{howard2017mobilenets} and bottleneck residual blocks \cite{sandler2018mobilenetv2} for the high (shallow) and low (deep) resolution branches respectively. SCMNet \cite{singha2021scmnet} proposes that the deep and shallow branches each produce valuable information the other may exploit, and enables this by introducing repeated information sharing between the branches.
-
 \subsection{Crack Detection and Segmentation}
 Crack detection has been a growing area of research in recent years \cite{hamishebahar_comprehensive_2022}.
-The detection of surface-level cracks is significant in evaluating the health of structures, and was found to be achievable using modern camera-based deep computer vision techniques.
-Zhang \textit{et al.} \cite{zhang_road_2016}, for instance, proposed an early CNN for performing crack detection on a dataset of 500 crack images. While approaches initially focused on object detection and classification, many recent studies apply semantic segmentation \cite{hamishebahar_comprehensive_2022} due to the additional valuable information provided on crack shape and size. Initial approaches applied existing state-of-the-art segmentation networks or backbones to crack detection, such as U-Net \cite{david_jenkins_deep_2018} and SegNet \cite{chen_pavement_2020}.
+The detection of surface-level cracks is significant in evaluating the health of structures, and achievable using automated camera-based approaches with modern computer vision techniques.
+Zhang \textit{et al.} \cite{zhang_road_2016}, for instance, proposed an early CNN for performing crack detection on a dataset of 500 crack images. While approaches initially focused on object detection and classification, many recent studies apply semantic segmentation \cite{hamishebahar_comprehensive_2022} due to the valuable additional information provided on crack shape and size. Initial approaches often applied existing segmentation networks or backbones to crack detection, such as U-Net \cite{david_jenkins_deep_2018} and SegNet \cite{chen_pavement_2020}.
 
 There are two unique issues in crack segmentation compared to other segmentation tasks. First, the thin and fine-grained nature of cracks means especially dense features must be maintained throughout the model, as any reduction in feature resolution will cause major inaccuracies in fine crack shapes. Secondly, cracks typically make up a minority of a given input image even when they are present ($<5\%$ of pixels), resulting in class imbalance. DeepCrack \cite{liu_deepcrack_2019} computes multi-scale features to ensure large and thin cracks are accurately segmented and applies a class-balanced loss computed multiple times throughout the network to address class imbalance. FPHBN \cite{yang_feature_2019} instead derives multi-scale information via a feature pyramid, and compares their approach with other models across multiple datasets. MR-CrackNet \cite{nayyeri_multi-resolution_2021} applies a modified ResNet \cite{he_deep_2015} backbone, addressing the maintaining of feature resolution by upsampling extracted features after each block.
-Many of the above approaches are evaluated on unique datasets not publicly available, making comparisons challenging. A number of datasets have been proposed for crack segmentation, including CrackBgData \cite{nayyeri_multi-resolution_2021}, CRACK500 \cite{yang_feature_2019}, and others \cite{eisenbach_how_2017} \cite{shi_automatic_2016} \cite{amhaz_automatic_2016} \cite{zou_cracktree_2012}.
+Many of the above approaches are evaluated on unique datasets not publicly available, making comparisons challenging. A number of public datasets have been proposed for crack segmentation, including CrackBgData \cite{nayyeri_multi-resolution_2021}, CRACK500 \cite{yang_feature_2019}, and others \cite{eisenbach_how_2017} \cite{shi_automatic_2016} \cite{amhaz_automatic_2016} \cite{zou_cracktree_2012}.
 
 \begin{figure}
     \centering
@@ -247,7 +271,7 @@ Many of the above approaches are evaluated on unique datasets not publicly avail
 \end{figure}
 
 \subsection{Efficient Crack Segmentation}
-Processing efficiency is significant when performing infrastructure crack detection due the large amount of images that must be processed when applied at scale. Various studies \cite{kerle_uav-based_2020} \cite{kang_autonomous_2018} have investigated the use of UAVs (Unmanned Aerial Vehicles) for high-speed crack segmentation, a system only viable with a highly efficient neural network such as Faster R-CNN \cite{ali_real-time_2021}. Recent studies have investigated efficient crack detection. SDDNet \cite{choi_sddnet_2019} maintains high-resolution features using a simple skip connection, and utilises depthwise separable convolutions and modified atrous spatial pyramid pooling techniques as introduced in the MobileNets \cite{howard_mobilenets_2017} and DeepLabV3+ \cite{chen_rethinking_2017} respectively. STRNet \cite{kang_efficient_2021} applies multi-head attention to the crack detection task, as well as a squeeze and excitation method for maintaining high feature detail.
+Processing efficiency is important when performing infrastructure crack detection due the large amount of images that must be processed when applied at scale. Various studies \cite{kerle_uav-based_2020} \cite{kang_autonomous_2018} have investigated the use of UAVs (Unmanned Aerial Vehicles) for high-speed crack segmentation, a system only viable with a highly efficient neural network such as Faster R-CNN \cite{ali_real-time_2021}. Recent studies have investigated efficient crack detection. SDDNet \cite{choi_sddnet_2019} maintains high-resolution features using a simple skip connection, and utilises depthwise separable convolutions and modified atrous spatial pyramid pooling techniques as introduced in the MobileNets \cite{howard_mobilenets_2017} and DeepLabV3+ \cite{chen_rethinking_2017} respectively. STRNet \cite{kang_efficient_2021} applies multi-head attention to the crack detection task, as well as a squeeze and excitation method for maintaining high feature detail.
 These approaches are similar to traditional efficient segmentation architectures in the maintaining of different architectural components focusing on low and high-level features, but typically with a particular focus on high-resolution feature maps for the fine-grained crack segmentation task.
 
 \section{The SC-CrackSeg Model}
@@ -263,17 +287,42 @@ These approaches are similar to traditional efficient segmentation architectures
 
 % THESE GO SOMEWHERE:
 % - Due to the small number of images available in each dataset, our approach applies a merged combination of images from multiple datasets for training.
-The key realisation we made was that that the use of a separate branch for maintaining high-resolution features in crack segmentation models \cite{nayyeri_multi-resolution_2021} is similar to the deep-brach/shallow-branch approach used in efficient segmentation models \cite{yu_bisenet_2018} \cite{poudel_contextnet_2018}. This is what lead to the development of our model, SC-CrackSeg, with which we hoped to use a proven architectural paradigm to apply the efficiency and performance of lightweight segmentation models to the crack segmentation task. Particularly, we focused on our team's previous model, SCMNet \cite{singha_scmnet_2021}. In SCMNet, deep (low-resolution) and shallow (high-resolution) features are repeatedly merged and feature-extracted before being fed back into their respective branches, maintaining both global and local features while permitting both to learn from one another. We posit applying this approach to the crack segmentation task would allow for the efficient learning of high-resolution crack features while retaining the computational efficiency such approaches often struggle to achieve.
+The use of a separate branch for maintaining high-resolution features in crack segmentation models \cite{nayyeri_multi-resolution_2021} is similar to the deep-brach/shallow-branch approach used in efficient segmentation models \cite{yu_bisenet_2018} \cite{poudel_contextnet_2018}. This key realisation is what lead to the development of our model, SC-CrackSeg, with which we hoped to use a proven architectural paradigm to apply the efficiency and performance of lightweight segmentation models to the crack segmentation task. Particularly, we focused on our team's previous model, SCMNet \cite{singha_scmnet_2021}. In SCMNet, deep (low-resolution) and shallow (high-resolution) features are repeatedly merged and feature-extracted before being fed back into their respective branches, maintaining both global and local features while permitting both to learn from one another. We posit applying this approach to the crack segmentation task would allow for the efficient learning of high-resolution crack features while retaining the computational efficiency such approaches often struggle to achieve.
 
-We made a number of changes to SCMNet to better suit it to the crack segementation task and generally improve it. We move from a two-input model to a single-input model to improve efficiency and simplicity of implementation. We modify SCMNet's Context Mining Module (CMM) by eliminating its image pooling components which contribute to boundary degeneration - especially significant with crack segmentation's fine boundaries and shapes. We also deploy a simplified feature fusion module, inspired by BiSeNet \cite{yu_bisenet_2018}, to aggregate the final features extracted from the two branches. % TODO go over additions in detail
+We made a number of changes to SCMNet to better suit it to the crack segementation task and generally improve it. We moved from a two-input to single-input model to improve efficiency and simplicity of implementation. We modify SCMNet's Context Mining Module (CMM) by eliminating its image pooling components as they contribute to boundary degeneration - especially significant with crack segmentation's fine boundaries and shapes. We also deploy a simplified feature fusion module, inspired by BiSeNet \cite{yu_bisenet_2018}, to aggregate the final features extracted from the two branches. % TODO go over additions in detail
+% Add a little bit more detail here
+% TODO add SC-CrackSeg architecture and blocks
 
 \subsection{Datasets}
-Another key innovation of the paper was the use of a unified dataset to evaluate SC-CrackSeg's performance. As many datasets used to train and evaluate other crack segmentation models are either small or not publicly available, we use a combined dataset of 12 different source crack segmentation datasets, all using the same labelling scheme. Retrieved from Kaggle (TODO LINK), this dataset provided us with 9505 train and 1695 test images. While unorthodox, we find this crack dataset to be exceptionally challenging due to the large variety of image types it contains, from extremely thick to extremely thin cracks, different surfaces, and even samples that do not contain cracks at all (which can be considered testing for false positives). We identify and amend a number of issues in this dataset, and then use it to benchmark a number of existing state-of-the art crack segmentation approaches against SC-CrackSeg.
+Another key innovation of the paper was the use of a unified dataset to evaluate SC-CrackSeg's performance. As many datasets used to train and evaluate other crack segmentation models are either small or not publicly available, we use a combined dataset of 12 different source crack segmentation datasets, all using the same labelling scheme. Retrieved from Kaggle \footnote{\url{https://www.kaggle.com/datasets/lakshaymiddha/crack-segmentation-dataset}}, this dataset provided us with 9505 train and 1695 test images. While unorthodox, we find this crack dataset to be exceptionally challenging due to the large variety of image types it contains, from extremely thick to extremely thin cracks, different surfaces, and even samples that do not contain cracks at all (which can be considered testing for false positives). We identify and amend a number of issues in this dataset, and then use it to benchmark a number of existing state-of-the art crack segmentation approaches against SC-CrackSeg.
+
+\subsection{Class Imbalance}
+Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. This is most commonly done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used \cite{kochkarev_data_2020}. 
+
+\hspace*{4mm}
+\begin{lstlisting}[language=Python, caption=Weighted categorical crossentropy function in python using TensorFlow 2.1]
+def weighted_cat_crossentropy(target, output, class_weights, axis=-1):
+    # scale preds so that the class probas of each sample sum to 1
+    output = output / math_ops.reduce_sum(output, axis, True)
+
+    epsilon_ = _constant_to_tensor(epsilon(), output.dtype.base_dtype)
+    output = clip_ops.clip_by_value(output, epsilon_, 1. - epsilon_)
+
+    # compute per-pixel categorical losses
+    cat_losses = tf.reduce_sum(target * math_ops.log(output), axis=axis)
+    
+    # Apply class weights
+    weight_indices = tf.argmax(target, axis=-1)
+    weight_map = tf.gather(class_weights, indices=weight_indices)
+    weighted_cat_losses = cat_losses * weight_map
+    
+    return - 1. * weighted_cat_losses
+\end{lstlisting}
 
 \subsection{Initial Results}
-We find SC-CrackSeg's combination of efficiency and performance to be highly competitive. Typically mean intersection over union (mIoU) is used to present segmentation results, but crack segmentation is highly unbalanced - focusing on one class (no crack) would skew model results. Therefore, we also assess using F1 score to further take false positives and false negatives across classes into consideration. In terms of pure performance, SC-CrackSeg is actually beaten by other models like DeepCrack. DeepCrack achieves 77.23\% mIoU and 85.49\% mean F1 score, while SC-CrackSeg produces a marginally lower 77.0477\% mIoU and 85.34\% mean F1. However, SC-CrackSeg's focus on efficiency shows its benefits here. SC-CrackSeg is over 12 times smaller and 4 times faster than DeepCrack. DeepCrack possesses 14.7 million parameters (size of weights) and requires 78.8GFlops of computation per prediction, while SC-CrackSeg requires only 1.24 million parameters and 2.8 GFlops. When optimised for performance using Nvidia's TensorRT, SC-CrackSeg achieves a speed of 220 predictions per second.
+We find SC-CrackSeg's combination of efficiency and performance to be highly competitive. Typically mean intersection over union (mIoU) is used to present segmentation results, but crack segmentation is highly unbalanced - focusing on one class (no crack) would skew model results. Therefore, we also assess using F1 score to better consider false positives and false negatives across classes. In terms of pure performance, SC-CrackSeg is actually beaten by other models like DeepCrack (\autoref{tab:sc-crackseg-initial-performance-comparison}) . DeepCrack achieves 77.23\% mIoU and 85.49\% mean F1 score, while SC-CrackSeg produces a marginally lower 77.0477\% mIoU and 85.34\% mean F1. However, SC-CrackSeg's focus on efficiency shows its benefits here (\autoref{tab:sc-crackseg-initial-efficiency-comparison}). SC-CrackSeg is over 12 times smaller and 4 times faster than DeepCrack. DeepCrack possesses 14.7 million parameters (size of weights) and requires 78.8GFlops of computation per prediction, while SC-CrackSeg requires only 1.24 million parameters and 2.8 GFlops. When optimised for performance using Nvidia's TensorRT, SC-CrackSeg achieves a speed of 220 predictions per second.
 
-\begin{table*}[htbp]
+\begin{table*}[ht]
     \begin{adjustbox}{width=\columnwidth,center}
         % \centering
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
@@ -284,7 +333,7 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
             \hline
             {DeepLab \cite{chen_encoder-decoder_2018}}        & {98.43}        & {98.50}                            & {52.28}                                 & {75.39}                                  & {99.24}                               & {68.66} & {83.95}        & {98.97} & {79.25} & {89.11}        & {99.52} & {60.57} & {80.05}        \\
             \hline
-            {Unet \cite{}}                                    & {98.18}        & {98.2}                             & {48.97}                                 & {73.58}                                  & {99.09}                               & {65.74} & {82.42}        & {98.96} & {70.62} & {84.79}        & {99.23} & {61.49} & {80.20}        \\
+            {Unet \cite{ronneberger_u-net_2015}}                                    & {98.18}        & {98.2}                             & {48.97}                                 & {73.58}                                  & {99.09}                               & {65.74} & {82.42}        & {98.96} & {70.62} & {84.79}        & {99.23} & {61.49} & {80.20}        \\
             \hline
             {SegNet\cite{chen_pavement_2020}}                 & {98.27}        & {98.30}                            & {52.17}                                 & {75.23}                                  & {99.14}                               & {68.57} & {83.85}        & {99.09} & {71.15} & {85.12}        & {99.19} & {66.17} & {82.63}        \\
             \hline
@@ -300,6 +349,7 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
         \end{tabular}
     \end{adjustbox}
     \caption{Performance evaluation of different models on crack test set}%\label{tab5}
+    \label{tab:sc-crackseg-initial-performance-comparison}
 \end{table*}
 
 \begin{table*}
@@ -331,18 +381,12 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
             \multicolumn{10}{l}{}
         \end{tabular}
     \end{adjustbox}
-    \caption{Efficiency analysis}\label{tab6}
+    \caption{Efficiency analysis against SC-CrackSeg}
+    \label{tab:sc-crackseg-initial-efficiency-comparison}
 \end{table*}
 
 
-\section{Further exploration of CrackSeg and Competitors} % maybe this instead of the two below
-\subsection{Class Balancing and Re-Running of Experiments}
-Besides feature resolution, class imbalance is the other key domain-specific issue in crack segmentation \cite{hamishebahar_comprehensive_2022}. Due to the overwhelming majority of "no crack" classes, the model is implicitly encouraged to prioritise predicting them in each pixel. In a dataset where cracks make up 5\% of the image, for example, a trivial model that always predicts "no crack" would achieve 95\% accuracy. Therefore, models must often be encouraged to accurately learn the minority class through some means of class balancing. The most common (and trivial) of these is done by simply weighting the produced model losses depending on the sample, with less common samples receiving higher weights. In semantic segmentation, where each pixel in an image effectively contains it's own loss, we achieved this by using the ground truth to map a multiplication operation onto the per-pixel losses. The weights chosen for each class can vary, but the inverse of each classes proportion in the training dataset is typically used \cite{kochkarev_data_2020}. We also assessed Focal Tversky loss \cite{abraham_novel_2018}, but found it increased boundary degeneration between crack and non-crack classes.
-
-Surprisingly, we found no benefits from class balancing when running the experiments for our initial paper. The above inverse frequency balance, hardcoded values, and Focal Tversky Loss were all attempted, though none improved output F1 score, and even reduced it at times. Due to time limitations with the publication, these unpromising results were not fully explored and were ommitted from the final publication. However, during the repetition of these experiments in an environment consistent with subsequent experiments, class balancing was found to have significant impact. [TODO FIGURE]. It is unknown what caused this change, as the original version of the code used to run the experiment is no longer accessible.
-
-Given the presence of these changes, I initially re-ran all of our final crack segmentation experiments using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
-
+\section{Further exploration of SC-CrackSeg and Competitors}
 \subsection{The Performance of SDDNet}
 While Tanmay Singha and myself implemented a number of existing crack segmentation models for fair comparison against SC-CrackSet, some could not be completed due to time limitations. Notably, a from-scratch implementation of 2019's SDDNet \cite{choi_sddnet_2019} was in development, but could not be completed in time for the final publication. The SDDNet implementation has since been completed and evaluated, and results are surprising: SDDNet, at a similar parameter count and computational efficiency, outperforms all other models tested by a significant margin.
 
@@ -361,7 +405,7 @@ Finally, SDDNet's decoder upsamples input features in two stages, applying a ski
 % TODO add more figures, add quant analysis figures 
 \subsection{Modifications to CrackSeg}
 
-\begin{figure}[t]
+\begin{figure*}[]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
@@ -395,7 +439,7 @@ Finally, SDDNet's decoder upsamples input features in two stages, applying a ski
 
     \caption{Diagrams representing significant architectures during experimentation.}
     \label{fig:sc-crackseg-versions}
-\end{figure}
+\end{figure*}
 
 Based on the strong performance of a simple model like SDDNet, we hypothesised that SC-CrackSeg could be optimised further towards the crack segmentation task. Therefore, we experimented with our architecture, seeking to take into consideration many of the design choices made in successful models like SDDNet.
 
@@ -412,6 +456,9 @@ Another consideration was the significance of the gradual upsampling skip connec
 % PARAMETERS ETC COMPARISON TABLE HERE
 
 Even though our best approaches introduced SDDNet's DenSep module, we notably did not borrow another core feature - the final ASPP stage. This is as SC-CrackSeg already possesses high-quality global context refinement via its depp branch, which aggregates global context through repeated downsampling and then merges these with the more fine features.
+
+\subsection{Experimental Setup}
+All new experiments were run using using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
 
 \subsection{Experiment Results}
 
@@ -516,6 +563,9 @@ Qualitative analysis revealed something interesting - only SDDNet and SC-CrackSe
 \end{figure}
 
 Class balancing again achieved mixed success. While it initially appeared to have significant impact on performance, these were not consistent across experiments and random seeds. In fact, class imbalanced seemed to harm model performance in some areas, causing finely detailed crack segments to merged into a single large body [FIGURE]. High class imbalance specifically seemed to reduce model performance significantly.
+
+ 
+% Surprisingly, we found no benefits from class balancing when running the experiments for our initial paper. The above inverse frequency balance, hardcoded values, and Focal Tversky Loss were all attempted, though none improved output F1 score, and even reduced it at times. Due to time limitations with the publication, these unpromising results were not fully explored and were ommitted from the final publication. We also assessed Focal Tversky loss \cite{abraham_novel_2018}, but found it increased boundary degeneration between crack and non-crack classes.
 
 \subsection*{Conclusions}
 
