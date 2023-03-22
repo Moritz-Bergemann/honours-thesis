@@ -445,14 +445,6 @@ Even though our best approaches introduced SDDNet's DenSep module, we notably di
 All new experiments were run using using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
 
 \subsection{Experiment Results}
-% TODO add ablation
-% - SC-CrackSeg-2
-%   - Just less deep branch blocks
-%   - Just more shallow branch blocks
-% - SC-CrackSeg-3
-%   - Just densep
-%   - Just skip connection
-
 
 % TODO add figure showing class-imbalanced predictions
 
@@ -562,9 +554,33 @@ Class balancing again achieved mixed success. While it initially appeared to hav
 
 Modifications in SC-CrackSeg-2 and SC-CrackSeg-3b were ablated. SC-CrackSeg-3b performed surprisingly strongly without the additional skip connection, though it still helps to improve performance and stabilise the model. SC-CrackSeg-2 originally contained more channels and additional layers in the shallow branch to increase processing of fine details, but ablation identified this increased complexity was unnecessary.
 
+\begin{table}[]
+    \begin{tabular}{|r|r|l|r|l|l|}
+        \hline
+        \multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Deep \\ Conv \\ Layers/Set \\ Removed\end{tabular}}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Shallow \\ Conv \\ Layers/Set \\ Added\end{tabular}}} & \textbf{\begin{tabular}[c]{@{}l@{}}Reduced \\ Max\\ Channels\end{tabular}} & \multicolumn{1}{l|}{\textbf{Val mF1}} & \textbf{FLOPS} & \textbf{Parameters} \\ \hline
+        0                                                                                                            & 0                                                                                                            &                                                                            & 0.807                                 & 1.4M           & 1.27M               \\ \hline
+        1                                                                                                            & 0                                                                                                            &                                                                            & \textbf{0.808}                        & 1.22M          & 0.97M               \\ \hline
+        0                                                                                                            & 1                                                                                                            &                                                                            & 0.798                                 & 1.42M          & 1.31M               \\ \hline
+        1                                                                                                            & 1                                                                                                            &                                                                            & \textbf{0.808}                        & 1.24M          & 1.01M               \\ \hline
+        2                                                                                                            & 0                                                                                                            &                                                                            & 0.799                                 & \textbf{1.14M} & \textbf{0.7M}       \\ \hline
+        1                                                                                                            & 0                                                                                                            & Yes                                                                        & 0.807                                 & 1.19M          & 0.81M               \\ \hline
+    \end{tabular}
+\end{table}
 
+\begin{table}[]
+    \begin{tabular}{|l|l|r|l|l|}
+        \hline
+        \textbf{Skip Connection} & \textbf{DenSep Module} & \multicolumn{1}{l|}{\textbf{Val mF1}} & \textbf{FLOPS}        & \textbf{Parameters} \\ \hline
+                                 &                        & 0.807                                 & \textbf{1.4M}         & \textbf{1.27M}      \\ \hline
+        Yes                      &                        & 0.809                                 & 1.44M                 & 1.28M               \\ \hline
+                                 & Yes                    & 0.811                                 & 2.12M                 & 1.5M                \\ \hline
+        Yes                      & Yes                    & \textbf{0.812}                        & 2.16M                 & 1.51M               \\ \hline
+    \end{tabular}
+\end{table}
 
 \subsection*{Conclusions}
+
+
 
 While convential wisdom often states the strongest machine learning architectures are general, crack segmentation is an interesting example of a scenario where specifically tuned architectures can be significant. SC-CrackSeg and it's subsequent versions produced make select sacrifices in areas minimally impactful towards performance and applies specific optimisations for the crack segmentation task.
 
