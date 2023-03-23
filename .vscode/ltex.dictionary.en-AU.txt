@@ -23,3 +23,9 @@ enocuraging
 GFlops
 mIoU
 TensorRT
+Curtin
+ImageNet
+ViT
+DAFormer
+SegFormer
+MMSegmentation
