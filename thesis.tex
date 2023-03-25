@@ -439,10 +439,10 @@ Another consideration was the significance of the gradual upsampling skip connec
 
 % PARAMETERS ETC COMPARISON TABLE HERE
 
-Even though our best approaches introduced SDDNet's DenSep module, we notably did not borrow another core feature - the final ASPP stage. This is as SC-CrackSeg already possesses high-quality global context refinement via its depp branch, which aggregates global context through repeated downsampling and then merges these with the more fine features.
+Even though our best approaches introduced SDDNet's DenSep module, we notably did not borrow another core feature - the final ASPP stage. This is as SC-CrackSeg already possesses high-quality global context refinement via its deep branch, which aggregates global context through repeated downsampling and then merges these with the more fine features.
 
 \subsection{Experimental Setup}
-All new experiments were run using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running Tensorflow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
+All new experiments were run using my available experimental environment, which consisted of a single Nvidia RTX 2080Ti, running TensorFlow 2.1 and python 3.6 using the Nvidia TensorFlow Docker container (nvcr.io/nvidia/tensorflow:20.03-tf2-py3). All experiments used the same random seed for consistency.
 
 \subsection{Experiment Results}
 
@@ -590,7 +590,7 @@ Modifications in SC-CrackSeg-2 and SC-CrackSeg-3b were ablated. SC-CrackSeg-3b p
             2                                                                                                            & 0                                                                                                            &                                                                            & 0.799                                 & \textbf{1.14M} & \textbf{0.7M}       \\ \hline
             1                                                                                                            & 0                                                                                                            & Yes                                                                        & 0.807                                 & 1.19M          & 0.81M               \\ \hline
         \end{tabular}
-        
+
         \quad
 
         \begin{tabular}{|l|l|r|l|l|}
@@ -633,7 +633,7 @@ Ultimately, we introduce a number of competitive crack segmentation architecture
 \subsection{Unsupervised Domain Adaptation}
 Unsupervised Domain Adaptation (UDA) fundamentally seeks to address the lack of large amounts of high-quality training data for machine learning tasks. A subset of transfer learning, domain adaptaion explores how to transfer knowledge learned on a labelled source domain to an unlabelled target domain, where the two domains possess the same label space but contain a domain shift. This shift may be small (e.g. one city to another) or large (synthetic to real data). Formally, consider a source dataset $D_S$ consisting of inputs $X_S$ and labels $Y_S$ as samples from an overall distribution $P_S$. Similarly, a target set $D_T$ consists of images $X_T$ from a distribution $P_T$. Critically, the labels, $Y_T$, are not available. Due to the domain shift between the datasets, we can intuit $P_T \neq P_S$, bu that  $P_S$ will be a strong starting point for learning $P_T$ due to the similarity of the domains. UDA, then, involves strategies for moving from $P_S$ to $P_T$ \cite{wilson_survey_2020}, unsupervised labels for our true desired target $P_T$ are not available.
 
-Many fundamentally different approaches to domain adaptation exist. Two in particular have become relevant to semantic segmentation: domain-adversarial learning and self-training. Domain adversarial learning is a subset of domain invariant feature learning \cite{wilson_survey_2020}, a UDA approach based on the intuition that a model will be most successful operating on features similar to those it was trained on. In other words, this UDA approach improves performance by encouraging the model to produce features from the target set similar to those in the source set. This is usually achieved by adding another parameter to the model loss, such as the statistical distance between the source and target model's feature distributions \cite{gretton_kernel_2006} \cite{sun_return_2015}. Recently, many publications instead implement an adversarial \cite{goodfellow_generative_2014} approach. One model is trained on the source/target dataset tasks, while another, the discriminator, takes features from the former as input and is trained to classify whether the features belong to the source or target dataset. The discriminator's loss is then negated and added to the original model's loss, training it to "trick" the discriminator. The intuition here is that producing source and target features that a neural network cannot distinguish is a more effective means of ensuring their similarity than traditional distances. This approach is known as domain adversarial learning \cite{ganin_domain-adversarial_2016}.
+Many fundamentally different approaches to domain adaptation exist. Two in particular have become relevant to semantic segmentation: domain-adversarial learning and self-training. Domain adversarial learning is a subset of domain invariant feature learning \cite{wilson_survey_2020}, a UDA approach based on the intuition that a model will be most successful operating on features similar to those it was trained on. In other words, this UDA approach improves performance by encouraging the model to produce features from the target set similar to those in the source set. This is usually achieved by adding another parameter to the model loss, such as the statistical distance between the source and target model's feature distributions \cite{gretton_kernel_2006} \cite{sun_return_2015}. Recently, many works \cite{ganin_unsupervised_2015} \cite{ganin_domain-adversarial_2016} instead implement an adversarial \cite{goodfellow_generative_2014} approach. One model is trained on the source/target dataset tasks, while another, the discriminator, takes features from the former as input and is trained to classify whether the features belong to the source or target dataset. The discriminator's loss is then negated and added to the original model's loss, training it to "trick" the discriminator. The intuition here is that producing source and target features that a neural network cannot distinguish is a more effective means of ensuring their similarity than traditional distances. This approach is known as domain adversarial learning \cite{ganin_domain-adversarial_2016}.
 
 Self-training, or pseudo-labelling, is another common approach. It's intuition is that the highest quality, most "confident" predictions made by a source-trained model on target data will provide more valuable than non-valuable knowledge to the model \cite{wilson_survey_2020} \cite{kamnitsas_transductive_2021}. In essence, the source-trained model makes predictions on target samples, the most confident of these predictions - known as pseudo-labels - are added to the training set, and the cycle is repeated. How the confidence of a model is determined varies. Some studies use ensemble approaches, though many semantic segmentation techniques use the magnitude of a model's softmax output as a measure of confidence, where a greater softmax value is a more confident prediction \cite{zou_domain_2018}.
 
@@ -663,19 +663,45 @@ My final training pipeline was built on top of the DAFormer repository [FOOTNOTE
 
 % TODO some of this should go into methods, the rest should stay here as a more thorough explanation of DAFormer
 
-\section{Methods}
+\section{Domain Adversarial SegFormer}
+
+We here describe the experimental setup for Domain Adversarial SegFormer (DAS). Fundamentally, DAS follows the discriminator-based adversarial domain adaptation approach. Our system is trained two-fold: firstly, we perform conventional training by making our segmentation model, consisting of feature-extractor $F$ and classifier $C$, make predictions on samples $X_S$ from our source dataset, then using its labels $Y_s$ to produce the segmentation loss $\mathcal{L}_{seg}$. We then apply an adversarial discriminator $D$ to the features produced by the feature-extractor on source samples $X_S$ and unlabelled target samples $X_T$. This discriminator attempts to classify input features as belonging to the source or target distribution, and is evaluated to produce the discriminator loss $\mathcal{L}_{disc}$. The loss of the discriminator is then used to encourage the segmentation model, in theory pushing it to produce domain-invariant features and thus perform more strongly on the target set. This process can be thought of as alternately optimising the following two objectives:
+
+\begin{itemize}
+    \item Segmentation Network: $CF(X_T)$
+    \item Discriminator: 
+\end{itemize}
+
+DAS is built upon the DAFormer \cite{hoyer_daformer_2022} repository \footnote{\url{https://github.com/lhoyer/DAFormer}}, which itself is built upon the MMSegmentation Repository \footnote{\url{https://github.com/open-mmlab/mmsegmentation}} (version 0.16.0). We use this codebase as a baseline for our work to allow for improved accessibility to the project and interoperability with other research, as all MMSegmentation projects are structured and developed in the same way. In this work, we effectively engineer modular extensions to the MMSegmentation repository that permit domain adversarial training. To demonstrate the flexibility of the platform, we develop domain adversarial models not only using SegFormer, but also DeeplabV3+.
+
+The repository containing the code is hosted publicly on GitHub \footnote{\url{https://github.com/Moritz-Bergemann/domain-adversarial-segformer}}. We use PyTorch 1.8 in an Ubuntu server with a single 2080Ti for all experiments. Detailed steps to reproduce the training environment can be found in the repository README.
 
 - We use gradient reversal for end-to-end training of model
-
-% Multi-Level WITH OUTPUT
-- We implement feature discriminators in the final 2 layers following DCGAN \cite{tsai_learning_2020}
-
-\section{Experimental Results}
-
 - You can tell it works because removing gradient reversal makes the model perform fine on source but destroys target performance as the adversarial networks instead "cooperate" to maximise discriminator performance.
+
 
 - Initial experimental results had the adaptation factor as far too high (0.25-1), consistently destroying model performance
 - Later iterations used lower adaptations factors
+
+\subsection{Foundational Setup}
+
+\subsection{Explored Iterations}
+
+\subsubsection{Basic Feature Discriminator}
+\subsubsection{Basic Output Discriminator}
+\subsubsection{Multi Level Discriminator Ensemble}
+- We implement feature discriminators in the final 2 layers following DCGAN \cite{tsai_learning_2020}
+\subsubsection{Patch-Wise Discriminator}
+\subsubsection{}
+\subsubsection{}
+
+
+
+% Multi-Level WITH OUTPUT
+
+\section{Experimental Results}
+
+
 
 - Inference time is significantly faster with domain adversarial models, though this comes at the cost of higher memory usage (as discriminator models must be additionally loaded), this cost may be mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and complexity
 
