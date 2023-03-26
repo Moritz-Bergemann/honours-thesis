@@ -668,32 +668,74 @@ My final training pipeline was built on top of the DAFormer repository [FOOTNOTE
 We here describe the experimental setup for Domain Adversarial SegFormer (DAS). Fundamentally, DAS follows the discriminator-based adversarial domain adaptation approach. Our system is trained two-fold: firstly, we perform conventional training by making our segmentation model, consisting of feature-extractor $F$ and classifier $C$, make predictions on samples $X_S$ from our source dataset, then using its labels $Y_s$ to produce the segmentation loss $\mathcal{L}_{seg}$. We then apply an adversarial discriminator $D$ to the features produced by the feature-extractor on source samples $X_S$ and unlabelled target samples $X_T$. This discriminator attempts to classify input features as belonging to the source or target distribution, and is evaluated to produce the discriminator loss $\mathcal{L}_{disc}$. The loss of the discriminator is then used to encourage the segmentation model, in theory pushing it to produce domain-invariant features and thus perform more strongly on the target set. This process can be thought of as alternately optimising the following two objectives:
 
 \begin{itemize}
-    \item Segmentation Network: $CF(X_T)$
-    \item Discriminator: 
+    \item Segmentation Network: $C(F(X_S)), D(F(X_S)), F(X_T) \rightarrow \mathcal{L}_{seg} - \mathcal{L}_{disc} $
+    \item Discriminator: $D(F(X_S)), F(X_T) \rightarrow \mathcal{L}_{disc}$ 
 \end{itemize}
+
+Since these stages require making many of the same predictions and the discriminator is relatively small in terms of parameters, we train the two models in an end-to-end manner using a gradient reversal layer (GRL) \cite{ganin_domain-adversarial_2016}. The gradient is reversed at the beginning of the feature extractor, meaning backpropagation can simply be performed on $\mathcal{L}_{seg} + \mathcal{L}_{disc}$. This will encourage the discriminator to minimise domain classification error, while, upon gradient reversal, encouraging the segmentation model to maximise the domain classification error. The adaptation factor $\lambda$ scales the gradient as it moves through the GRLs - this can be used to reduce the effect of the discriminator loss on the segmentation model while still allowing the discriminator to learn effectively. 
+
+\hspace*{4mm}
+\begin{lstlisting}[language=Python, caption=Gradient reversal function implemented in PyTorch. Based on \url{https://github.com/tadeephuy/GradientReversal}]
+class GradientReversalFunction(Function):
+    """Gradient reversal function. Acts as identity transform during forward pass, 
+    but multiplies gradient by -da_lambda during backpropagation. this means da_lambda 
+    effectively becomes the loss weight during training.
+    """
+    @staticmethod
+    def forward(ctx, x, da_lambda):
+        ctx.save_for_backward(x, da_lambda)
+        return x
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = None
+        _, da_lambda = ctx.saved_tensors
+        if ctx.needs_input_grad[0]:
+            grad_input = - da_lambda*grad_output
+        return grad_input, None
+
+    revgrad = GradientReversalFunction.apply
+\end{lstlisting}
+
+% TODO do a little diagram of gradient reversal here
+For our experiments, we use SegFormer-B3 \cite{xie_segformer_2021} pre-trained on ImageNet as a backbone. While DAFormer uses the larger SegFormer-B5 model for primary experiments, introducing the domain discriminator increases the parameters (and therefore memory requirement) of the experimental setup, which we address by using a smaller backbone to compare results. Our SegFormer backbone is pretrained on the ImageNet dataset. Pretraining is critical to the performance of transformers, especially in terms of domain adaptivity \cite{dosovitskiy_image_2021}. Consequently, we do not change the backbone structure as part of our experiments as this would complicate the use of the pre-trained weights.
 
 DAS is built upon the DAFormer \cite{hoyer_daformer_2022} repository \footnote{\url{https://github.com/lhoyer/DAFormer}}, which itself is built upon the MMSegmentation Repository \footnote{\url{https://github.com/open-mmlab/mmsegmentation}} (version 0.16.0). We use this codebase as a baseline for our work to allow for improved accessibility to the project and interoperability with other research, as all MMSegmentation projects are structured and developed in the same way. In this work, we effectively engineer modular extensions to the MMSegmentation repository that permit domain adversarial training. To demonstrate the flexibility of the platform, we develop domain adversarial models not only using SegFormer, but also DeeplabV3+.
 
 The repository containing the code is hosted publicly on GitHub \footnote{\url{https://github.com/Moritz-Bergemann/domain-adversarial-segformer}}. We use PyTorch 1.8 in an Ubuntu server with a single 2080Ti for all experiments. Detailed steps to reproduce the training environment can be found in the repository README.
 
-- We use gradient reversal for end-to-end training of model
-- You can tell it works because removing gradient reversal makes the model perform fine on source but destroys target performance as the adversarial networks instead "cooperate" to maximise discriminator performance.
-
-
 - Initial experimental results had the adaptation factor as far too high (0.25-1), consistently destroying model performance
 - Later iterations used lower adaptations factors
-
-\subsection{Foundational Setup}
-
+% TODO maybe write something here about marginalising class distribution
 \subsection{Explored Iterations}
+To effectively assess the effect of domain adversarial training when using segmentation transformers, we compare various adversarial discriminators and adversarial approaches.
 
 \subsubsection{Basic Feature Discriminator}
-\subsubsection{Basic Output Discriminator}
-\subsubsection{Multi Level Discriminator Ensemble}
-- We implement feature discriminators in the final 2 layers following DCGAN \cite{tsai_learning_2020}
+The basic feature discriminator (as deployed in \cite{hoffman_fcns_2016}) takes the SegFormer encoder's features as input to make domain classification. The input features are in the $H \times W \times C$ non-patch-embedded format, similar to the input of many existing discriminators.
+
+We implement a linear discriminator, consisting of 3 linear layers, to mirror SegFormer's simple decoder and take advantage of features that have been learned by the feature extractor to be easily interpreted by this structure. 
+
+Additionally, we also implement a more traditional convolutional discriminator, consisting of 2 convolutional layers before global average pooling. % TODO rewrite this and make it more sense, the idea is itll perform good because the feature extractor was trained to produce features easily discernible by a linear feature extractor.
+
+\subsubsection{Output Discriminator}
+
+Based on \cite{tsai_learning_2020}, we introduce a convolutional discriminator on the output space. While slightly different to the feature-level discriminators, the intuition here is similar - the structure of segmentation output produced from the source and target domains should be similar.
+
+Similar to Tsai et. al. \cite{tsai_learning_2020}, we use a convolutional discriminator with 6 layers, which takes the segmentation logits as input.
+
 \subsubsection{Patch-Wise Discriminator}
-\subsubsection{}
-\subsubsection{}
+The patch-wise discriminator seeks to take specific advantage of the transformer architecture. As with TVT \cite{yang_tvt_2021}, we intuit that embedded patches within the transformer's self-attention represent different aspects or features of the input image. Therefore, we can apply discriminators to each patch individually to ensure feature components are domain indiscriminate without marginalising out distribution information.
+
+In the conventional patch-wise discriminator, all features are passed in sequence to the same discriminator. In a further effort to avoid marginalising class distribution, we deploy a unique patch-wise discriminator, where each patch position (which we intuit to possess similar kinds of features across different inputs) receives its own discriminator with separate weights.
+
+To maintain structure simple and similar to the rest of the transformer, each patch-wise discriminator consists of 3 linear layers, applied along patch channels.
+
+\subsubsection{Multi Level Discriminator Ensemble}
+As many approaches establish \cite{hoffman_fcns_2016} \cite{bermudez-chacon_domain-adaptive_2018}, the complexity of the semantic segmentation task means aligning features at a single point is often insufficient. Therefore, we deploy multiple combinations of different discriminators at multiple levels throughout the model. This includes multiple feature-level discriminators and a feature-level and output-level discriminator combination, similar to \cite{tsai_learning_2020}.
+
+- We implement feature discriminators in the final 2 layers following DCGAN \cite{tsai_learning_2020}
+\subsubsection{Class-Wise Discriminator}
+We identify the marginalisation of class distribution to be the most significant issue with DAS. Therefore, we deploy an approach similar to FADA \cite{wang_classes_2020}. Features are passed into a fine-grained discriminator which produces pixel-level domain-and-class predictions. For instance, when making a prediction from the $1024 \times 2048 \times 3$ resolution, 19-class cityscapes dataset, the result will be a $1024 \times 2048 \times 38$ prediction on class for each class-domain combination. Performance is improved via unparameterised upsamples to this resolution. The disciriminator itself follows FADA, consisting of 2 convolutional layers with stride 1 followed by two convolutional layers - one to produce the source probability distribution and one to produce the target.
 
 
 
@@ -701,11 +743,10 @@ The repository containing the code is hosted publicly on GitHub \footnote{\url{h
 
 \section{Experimental Results}
 
-
-
+\subsection{Initial Results and Experimentation}
+\subsection{Comparison of DAS Architectures}
+\subsection{Efficiency}
 - Inference time is significantly faster with domain adversarial models, though this comes at the cost of higher memory usage (as discriminator models must be additionally loaded), this cost may be mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and complexity
-
-
 
 \section{Future Work}
 A potentially promising approach would be to combine the class-level predictions of FADA \cite{wang_classes_2020} with the patch-wise discrimination approach of TVT \cite{yang_tvt_2021}. As the latter discusses, patches often represent class-level or global feature-level information. Therefore, enocuraging patches to learn domain-indiscriminate encodings while maintaining classes may allow adversarial approaches to overcome class marginalisation. However, this approach would require a means of labelling source and target patches with class information.
