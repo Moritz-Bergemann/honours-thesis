@@ -744,8 +744,12 @@ We identify the marginalisation of class distribution to be the most significant
 \section{Experimental Results}
 
 \subsection{Initial Results and Experimentation}
+Interestingly
+
 \subsection{Comparison of DAS Architectures}
 \subsection{Efficiency}
+Compared to DAFormer, significantly less work is done during most DAS training approaches. Therefore, experiment duration is typically significantly shorter - while DAFormer MiT-B3 experiments typically take around 12 hours to execute on a 2080Ti GPU, many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture.
+
 - Inference time is significantly faster with domain adversarial models, though this comes at the cost of higher memory usage (as discriminator models must be additionally loaded), this cost may be mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and complexity
 
 \section{Future Work}
