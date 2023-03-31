@@ -744,13 +744,13 @@ We identify the marginalisation of class distribution to be the most significant
 \section{Experimental Results}
 
 \subsection{Initial Results and Experimentation}
-Interestingly
+An interesting experiment helps demonstrate the adversarial learning approach. If the discriminator's gradient reversal layer is removed, source dataset performance will be maintained as normal, though target dataset performance will be completely destroyed, nearing 0 mIoU. This is as the segmentation network's loss function essentially becomes $\mathcal{L}_{seg} + \mathcal{L}_{disc}$ - it is encouraged to both produce maximum performance on the source set and to make it as easy as possible for the discriminator to distinguish source and target samples, consequently eliminating domain transfer knowledge from the model.
+
+As a baseline, we run SegFormer MiTB3 source-only and using DAFormer's self-training approach. As expected
 
 \subsection{Comparison of DAS Architectures}
 \subsection{Efficiency}
-Compared to DAFormer, significantly less work is done during most DAS training approaches. Therefore, experiment duration is typically significantly shorter - while DAFormer MiT-B3 experiments typically take around 12 hours to execute on a 2080Ti GPU, many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture.
-
-- Inference time is significantly faster with domain adversarial models, though this comes at the cost of higher memory usage (as discriminator models must be additionally loaded), this cost may be mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and complexity
+Compared to DAFormer, significantly less work is done during most DAS training approaches. Therefore, experiment duration is typically significantly shorter - while DAFormer MiT-B3 experiments typically take around 12 hours to execute on a 2080Ti GPU, many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture. The increased memory cost could be somewhat mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and code complexity.
 
 \section{Future Work}
 A potentially promising approach would be to combine the class-level predictions of FADA \cite{wang_classes_2020} with the patch-wise discrimination approach of TVT \cite{yang_tvt_2021}. As the latter discusses, patches often represent class-level or global feature-level information. Therefore, enocuraging patches to learn domain-indiscriminate encodings while maintaining classes may allow adversarial approaches to overcome class marginalisation. However, this approach would require a means of labelling source and target patches with class information.
@@ -779,10 +779,19 @@ Other approaches seeking efficiency combine CNNs and transformers more directly.
 
 % "MobileNet convolutional" CHECK IF IT SHOULD BE BOTTLENECK?
 
+\section{Initial Exploration}
+We first compare baseline approaches by the lightweight segmentation models. Fast-SCNN performs poorly, indicating its lightweight, CNN-based architecture is not suitable for retaining complex cross-domain features. The lack of pre-training (as \cite{poudel_fast-scnn_2019} identify it does not improve model performance) may further extrapolate this.
+
+MobileViT and 
+
+
+
 \section{Methods}
 
 - Fast-SCNN using UDA performed very badly
 - This might be as it does not have any pre-trained weights, meaning pre-training inference struggles to improve
+
+\section{Results}
 
 \FloatBarrier
 
