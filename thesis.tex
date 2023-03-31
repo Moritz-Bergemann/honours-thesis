@@ -790,8 +790,9 @@ To this end, we first use pixel-counting scripts to determine the class distribu
 % Multi-Level WITH OUTPUT
 
 \section{Experimental Results}
-% 
 \subsection{Initial Results and Experimentation}
+An interesting experiment helps demonstrate the adversarial learning approach. If the discriminator's gradient reversal layer is removed, source dataset performance will be maintained as normal, though target dataset performance will be completely destroyed, nearing 0 mIoU. This is as the segmentation network's loss function essentially becomes $\mathcal{L}_{seg} + \mathcal{L}_{disc}$ - it is encouraged to both produce maximum performance on the source set and to make it as easy as possible for the discriminator to distinguish source and target samples, consequently eliminating domain transfer knowledge from the model.
+
 Initial experiments presented the central to adversarial domain adaptation with SegFormer. Regardless of what initial combinations of simple discriminators and parameters were attempted, performance on the target dataset was reduced, not increased. While we initially believed this to be an issue in our experimental setup, we verified our methods using a baseline experiment. Taking advantage of the flexible domain adaptation built upon MMSegmentation, we attached a simple DCGAN-like output-level discriminator to DeepLabV3+ using ResNet-50. Though this was not an optimal setup, it should still be expected to produce some improvement based on existing works \cite{tsai_learning_2020}, and the model did improve DeepLabV3+'s performance in the GTA$\rightarrow$Cityscapes task \ref{tab:das-baseline-experiment}. This indicates that our pipeline, while effective on existing models (and using a discriminator agnostic to feature space) improves the performance of past models but reduces the performance of SegFormer. While no specific cause could be diagnosed for this, we believe it to be an effect of transformers' baseline transferability due to self-attention \cite{dosovitskiy_image_2021} combined with the tendency for domain adversarial models to marginalise class distribution. In the case of SegFormer, the baseline model is already so effective that the improvement brought by making features domain indiscriminate is outweighed by the negative effects of marginalising the feature distribution. Throughout the rest of this chapter, we explore how different domain adversarial approaches interact with this issue and approaches to mitigate it.
 
 \begin{table}[]
@@ -836,17 +837,17 @@ Many papers in the semantic segmentation space do not use gradient reversal, but
     \caption{Results of using different adaptation factor ($\lambda$) for GTA$\rightarrow$CS}
 \end{table}
 
+\subsection{Comparison of DAS Architectures}
+
 \subsubsection{Individual Discriminators}
 
 
 \subsubsection{Ensemble Methods}
 Existing works \cite{chen_learning_2017} \cite{csurka_unsupervised_2021} \cite{ronneberger_u-net_2015} establish that the complex semantic segmentation task often means a single-point of feature alignment is not sufficient for performing accurate domain adaptation. Therefore, we apply ensembles combinations of our most successful discriminators to domain adaptation.
 
-\subsection{Comparison of DAS Architectures}
-\subsection{Efficiency}
-Compared to DAFormer, significantly less work is done during most DAS training approaches. Therefore, experiment duration is typically significantly shorter - while DAFormer MiT-B3 experiments typically take around 12 hours to execute on a 2080Ti GPU, many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture.
-
-- Inference time is significantly faster with domain adversarial models, though this comes at the cost of higher memory usage (as discriminator models must be additionally loaded), this cost may be mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and complexity
+\subsection{General Comments}
+\subsubsection{Efficiency}
+Compared to DAFormer, significantly less work is done during most DAS training approaches. Therefore, experiment duration is typically significantly shorter - while DAFormer MiT-B3 experiments typically take around 12 hours to execute on a 2080Ti GPU, many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture. The increased memory cost could be somewhat mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and code complexity.
 
 \section{Future Work}
 A potentially promising approach would be to combine the class-level predictions of FADA \cite{wang_classes_2020} with the patch-wise discrimination approach of TVT \cite{yang_tvt_2021}. As the latter discusses, patches often represent class-level or global feature-level information. Therefore, enocuraging patches to learn domain-indiscriminate encodings while maintaining classes may allow adversarial approaches to overcome class marginalisation. However, this approach would require a means of labelling source and target patches with class information.
@@ -875,6 +876,13 @@ Other approaches seeking efficiency combine CNNs and transformers more directly.
 
 % "MobileNet convolutional" CHECK IF IT SHOULD BE BOTTLENECK?
 
+\section{Initial Exploration}
+We first compare baseline approaches by the lightweight segmentation models. Fast-SCNN performs poorly, indicating its lightweight, CNN-based architecture is not suitable for retaining complex cross-domain features. The lack of pre-training (as \cite{poudel_fast-scnn_2019} identify it does not improve model performance) may further extrapolate this.
+
+MobileViT and 
+
+
+
 \section{Methods}
 
 \subsection{Baseline Experiment}
@@ -890,6 +898,8 @@ As efficicent segmentation models are significantly smaller than the SegFormer m
 
 - Fast-SCNN using UDA performed very badly
 - This might be as it does not have any pre-trained weights, meaning pre-training inference struggles to improve
+
+\section{Results}
 
 \FloatBarrier
 
