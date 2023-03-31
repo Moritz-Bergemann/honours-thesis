@@ -28,6 +28,7 @@
 \usepackage[bottom]{footmisc}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{tabulary}
 
 % ********
 % For code style
@@ -341,26 +342,26 @@ We find SC-CrackSeg's combination of efficiency and performance to be highly com
         \centering
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
             \hline
-            {}            & {}           & {}           & \multicolumn{5}{|c|}{\textbf{FPS of different types of model}} & {}          & {}                                                                                                                    \\
+            {}            & {}           & {}           & \multicolumn{5}{|c|}{\textbf{FPS of different types of model}} & {}          & {}                                                                                            \\
             \hline
             {Model}       & {Param.(M)}  & {GFLOPs}     & {Keras}                                                        & {TF}        & {TF-TRT32}   & {TF-TRT16}   & {TRT-INT8}   & {\begin{tabular}{@{}c@{}}Training\\time(s)\end{tabular}} &
             {\begin{tabular}{@{}c@{}}Model \\size (MB)\end{tabular}}                                                                                                                                                                                           \\
             \hline
-            {DeepLab}     & {41.0}       & {78.8}       & {20}                                                           & {21}        & {32}         & {48}         & {82}         & {415}                                                    & {158}         \\
+            {DeepLab}     & {41.0}       & {78.8}       & {20}                                                           & {21}        & {32}         & {48}         & {82}         & {415}                            & {158}         \\
             \hline
-            {U-Net}       & {31.0}       & {1740.0}     & {31}                                                           & {30}        & {39}         & {39}         & {50}         & {348}                                                    & {355}         \\
+            {U-Net}       & {31.0}       & {1740.0}     & {31}                                                           & {30}        & {39}         & {39}         & {50}         & {348}                            & {355}         \\
             \hline
-            {SegNet}      & {29.4}       & {245.0}      & {32}                                                           & {32}        & {44}         & {45}         & {56}         & {316}                                                    & {225}         \\
+            {SegNet}      & {29.4}       & {245.0}      & {32}                                                           & {32}        & {44}         & {45}         & {56}         & {316}                            & {225}         \\
             \hline
-            {DeepCrack}   & {14.7}       & {123.0}      & {33}                                                           & {33}        & {48}         & {50}         & {65}         & {257}                                                    & {112}         \\
+            {DeepCrack}   & {14.7}       & {123.0}      & {33}                                                           & {33}        & {48}         & {50}         & {65}         & {257}                            & {112}         \\
             \hline
-            {MR-CrackNet} & {17.7}       & {331}        & {14}                                                           & {14}        & {25}         & {28}         & {45}         & {1013}                                                   & {203}         \\
+            {MR-CrackNet} & {17.7}       & {331}        & {14}                                                           & {14}        & {25}         & {28}         & {45}         & {1013}                           & {203}         \\
             %\hline
             %{MR-CrackNet} & {17.7} & {331} & {} &  {} & {} & {} &  {} & {} & {}\\
             \hline
-            {SCMNet}      & \textbf{1.2} & {3.3}        & {61}                                                           & {67}        & {111}        & {111}        & {114}        & {182}                                                    & {10.7}        \\
+            {SCMNet}      & \textbf{1.2} & {3.3}        & {61}                                                           & {67}        & {111}        & {111}        & {114}        & {182}                            & {10.7}        \\
             \hline
-            {SC-CrackSeg} & {1.24}       & \textbf{2.8} & \textbf{70}                                                    & \textbf{78} & \textbf{216} & \textbf{216} & \textbf{220} & \textbf{93}                                              & \textbf{10.8} \\
+            {SC-CrackSeg} & {1.24}       & \textbf{2.8} & \textbf{70}                                                    & \textbf{78} & \textbf{216} & \textbf{216} & \textbf{220} & \textbf{93}                      & \textbf{10.8} \\
             \hline
             \multicolumn{10}{l}{}
         \end{tabular}
@@ -583,12 +584,12 @@ Modifications in SC-CrackSeg-2 and SC-CrackSeg-3b were ablated. SC-CrackSeg-3b p
         \begin{tabular}{|r|r|l|r|l|l|}
             \hline
             \multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Deep \\ Conv \\ Layers/Set \\ Removed\end{tabular}}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Shallow \\ Conv \\ Layers/Set \\ Added\end{tabular}}} & \textbf{\begin{tabular}[c]{@{}l@{}}Reduced \\ Max\\ Channels\end{tabular}} & \multicolumn{1}{l|}{\textbf{Val mF1}} & \textbf{FLOPS} & \textbf{Parameters} \\ \hline
-            0                                                                                                            & 0                                                                                                            &                                                                            & 0.807                                 & 1.4M           & 1.27M               \\ \hline
-            1                                                                                                            & 0                                                                                                            &                                                                            & \textbf{0.808}                        & 1.22M          & 0.97M               \\ \hline
-            0                                                                                                            & 1                                                                                                            &                                                                            & 0.798                                 & 1.42M          & 1.31M               \\ \hline
-            1                                                                                                            & 1                                                                                                            &                                                                            & \textbf{0.808}                        & 1.24M          & 1.01M               \\ \hline
-            2                                                                                                            & 0                                                                                                            &                                                                            & 0.799                                 & \textbf{1.14M} & \textbf{0.7M}       \\ \hline
-            1                                                                                                            & 0                                                                                                            & Yes                                                                        & 0.807                                 & 1.19M          & 0.81M               \\ \hline
+            0                                                             & 0                                                            &                                         & 0.807                                 & 1.4M           & 1.27M               \\ \hline
+            1                                                             & 0                                                            &                                         & \textbf{0.808}                        & 1.22M          & 0.97M               \\ \hline
+            0                                                             & 1                                                            &                                         & 0.798                                 & 1.42M          & 1.31M               \\ \hline
+            1                                                             & 1                                                            &                                         & \textbf{0.808}                        & 1.24M          & 1.01M               \\ \hline
+            2                                                             & 0                                                            &                                         & 0.799                                 & \textbf{1.14M} & \textbf{0.7M}       \\ \hline
+            1                                                             & 0                                                            & Yes                                     & 0.807                                 & 1.19M          & 0.81M               \\ \hline
         \end{tabular}
 
         \quad
@@ -704,7 +705,6 @@ DAS is built upon the DAFormer \cite{hoyer_daformer_2022} repository \footnote{\
 
 The repository containing the code is hosted publicly on GitHub \footnote{\url{https://github.com/Moritz-Bergemann/domain-adversarial-segformer}}. We use PyTorch 1.8 in an Ubuntu server with a single 2080Ti for all experiments. Detailed steps to reproduce the training environment can be found in the repository README.
 
-- Initial experimental results had the adaptation factor as far too high (0.25-1), consistently destroying model performance
 - Later iterations used lower adaptations factors
 % TODO maybe write something here about marginalising class distribution
 \subsection{Explored Iterations}
@@ -760,8 +760,6 @@ To this end, we first use pixel-counting scripts to determine the class distribu
 \section{Experimental Results}
 % 
 \subsection{Initial Results and Experimentation}
-Interestingly
-
 Initial experiments presented the central to adversarial domain adaptation with SegFormer. Regardless of what initial combinations of simple discriminators and parameters were attempted, performance on the target dataset was reduced, not increased. While we initially believed this to be an issue in our experimental setup, we verified our methods using a baseline experiment. Taking advantage of the flexible domain adaptation built upon MMSegmentation, we attached a simple DCGAN-like output-level discriminator to DeepLabV3+ using ResNet-50. Though this was not an optimal setup, it should still be expected to produce some improvement based on existing works \cite{tsai_learning_2020}, and the model did improve DeepLabV3+'s performance in the GTA$\rightarrow$Cityscapes task \ref{tab:das-baseline-experiment}. This indicates that our pipeline, while effective on existing models (and using a discriminator agnostic to feature space) improves the performance of past models but reduces the performance of SegFormer. While no specific cause could be diagnosed for this, we believe it to be an effect of transformers' baseline transferability due to self-attention \cite{dosovitskiy_image_2021} combined with the tendency for domain adversarial models to marginalise class distribution. In the case of SegFormer, the baseline model is already so effective that the improvement brought by making features domain indiscriminate is outweighed by the negative effects of marginalising the feature distribution. Throughout the rest of this chapter, we explore how different domain adversarial approaches interact with this issue and approaches to mitigate it.
 
 \begin{table}[]
@@ -780,6 +778,37 @@ Initial experiments presented the central to adversarial domain adaptation with 
     \label{tab:das-baseline-experiment}
 \end{table}
 
+\subsection{Adaptation Factor Settings}
+As the adaptation factor $\lambda$ determines the extent to which the model is influenced by the discriminator, it is a key aspect of successful model performance. Therefore, we first compare a number of adaptation factor configurations. As the segmentation and discriminator model performances are expected to be low initially, many domain adversarial approaches schedule the learning rate to grow over time, typically using the following growth formula \cite{ganin_domain-adversarial_2016}:
+
+\begin{equation}
+    \lambda = \frac{2}{1 + \exp(-\gamma p)} - 1
+\end{equation}
+
+Our initial experiments ignored this factor and set $\lambda$ to a large value (1 and greater), destroying model performance. To compare $\lambda$ values, we use a simple linear discriminator on the final encoder feature block output.
+
+Many papers in the semantic segmentation space do not use gradient reversal, but scale the discriminator loss impact on the segmentation network by factors around $0.0001$-$0.001$ for a similar effect. Our results reinforce these values. While no discriminator still performs the strongest, small adaptation factors are very close. Using $\lambda$ growth with large values like 1 still achieves strong results, but strongest are achieved with small learning rate values of 0.01 (with growth) and 0.001 (without growth). Surprisingly, using growth did not achieve the strongest results, which may be as the growth becomes too large near the end of training. We initially considered (since performing source-only training performs best) that the smallest adaptation factor would perform best by minimally interfering with source-only training, but the poor performance of $\lambda = 0.0001$ indicates influences that are too small can degrade performance further.
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{|r|l|r|l|}
+        \hline
+        \multicolumn{1}{|l|}{Max AF} & Use Growth & \multicolumn{1}{l|}{\ \ \ \ \ \ \ mIoU} & Notes       \\ \hline
+        \multicolumn{1}{|l|}{-}      & -          & \textbf{41.78}                          & Source-Only \\ \hline
+        0.001                        & No         & \textbf{40.11}                          &             \\ \hline
+        0.0001                       & No         & 35.53                                   &             \\ \hline
+        1                            & Yes        & 30.53                                   &             \\ \hline
+        0.1                          & Yes        & 39.46                                   &             \\ \hline
+        0.01                         & Yes        & 39.28                                   &             \\ \hline
+    \end{tabular}
+    \caption{Results of using different adaptation factor ($\lambda$) for GTA$\rightarrow$CS}
+\end{table}
+
+\subsubsection{Individual Discriminators}
+
+
+\subsubsection{Ensemble Methods}
+Existing works \cite{chen_learning_2017} \cite{csurka_unsupervised_2021} \cite{ronneberger_u-net_2015} establish that the complex semantic segmentation task often means a single-point of feature alignment is not sufficient for performing accurate domain adaptation. Therefore, we apply ensembles combinations of our most successful discriminators to domain adaptation.
 
 \subsection{Comparison of DAS Architectures}
 \subsection{Efficiency}
