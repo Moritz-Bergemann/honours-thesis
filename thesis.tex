@@ -16,7 +16,7 @@
 % \usepackage{subfig}
 \usepackage{graphicx}
 \usepackage{placeins} % For float barriers
-\usepackage{adjustbox}
+% \usepackage{adjustbox}
 \graphicspath{{res/}{../res/}} % path variable for graphics folders
 % other
 \usepackage[utf8]{inputenc}
@@ -29,6 +29,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{tabulary}
+\usepackage[export]{adjustbox}
 
 % ********
 % For code style
@@ -176,7 +177,7 @@ As with most computer vision applications, deep convolutional neural networks (C
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=0.3]{res/receptive-field.png}
-    \caption{A visualisation of locality across CNN layers \cite{lin_maritime_2017} - the neuron in each layer is only defined by the spatially close neurons in the previous layer. This is also demonstrates CNNs' limited receptive field.}
+    \caption{A visualisation of locality across CNN layers \cite{lin_maritime_2017} - the neuron in each layer is only defined by the spatially close neurons in the previous layer. This also demonstrates CNNs' limited receptive field.}
     \label{fig:receptive_field}
 \end{figure}
 
@@ -418,7 +419,7 @@ Upon these initial failures, I instead explored a more nuanced approach to the i
 
 Inspired by SDDNet, I replaced all shallow branch blocks with DenSep modules (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-skip}). The concatenation-based approach to feature extraction allows feature resolution to be maintained in the deep branch (where it is most essential) while minimising the downsampling done, as DenSep modules only downsample in their final block (\autoref{fig:densep-module}). An initial model with only these changes achieved promising results. An issue, however, is that since the deep and shallow branches share information, their dimensions must periodically match at the 3 information sharing points in the model, forcing the shallow branch to be downsampled further than in SDDNet. This is likely to reduce output granularity. I first addressed this by adjusting the information sharing system. Information would only be shared from the deep to the shallow branch, and the shallow branch would downsample less and possess less channels to counteract computing costs. Information sharing could then occur by reducing the deep branch's channels via pointwise convolution and then upsampling. These combined results produced one of our final architectures (\autoref{fig:sc-crackseg-versions-sc-crackseg-densep-upsample}).
 
-Another consideration was the significance of the gradual upsampling skip connection in SDDNet. While SC-CrackSeg already possesses a number of skip-like connections and gradual upsampling, these largely occur to increase from lower resolutions, and are still followed by an $8 \times$ upsample. Therefore, we added another skip connection with the early parts of the model before final output is computed. The skip connection features were initially resolved with the decoder features using another SA module as with the other skip connections in the model, but we found this to degrade performance (perhaps as the SA module failed to produce fine output at the highest resolutions). Replacing the SA module with a simple depthwise separable convolution resolved these issues. This approach was most successful, and while multiple variations were assessed, any increase in complexity (introducing upsamples or adding further skip connections) seemed to decrease model stability and quickly cause overfitting issues. 
+Another consideration was the significance of the gradual upsampling skip connection in SDDNet. While SC-CrackSeg already possesses a number of skip-like connections and gradual upsampling, these largely occur to increase from lower resolutions, and are still followed by an $8 \times$ upsample. Therefore, we added another skip connection with the early parts of the model before final output is computed. The skip connection features were initially resolved with the decoder features using another SA module as with the other skip connections in the model, but we found this to degrade performance (perhaps as the SA module failed to produce fine output at the highest resolutions). Replacing the SA module with a simple depthwise separable convolution resolved these issues. This approach was most successful, and while multiple variations were assessed, any increase in complexity (introducing upsamples or adding further skip connections) seemed to decrease model stability and quickly cause overfitting issues.
 
 % ALSO ADD we were able to get fine crack details (the little gap) that none of the previous models could
 
@@ -593,20 +594,22 @@ Modifications in SC-CrackSeg-2 and SC-CrackSeg-3b were ablated. SC-CrackSeg-3b p
 
 \subsection*{Conclusions}
 
-
-
-While conventional wisdom often states the strongest machine learning architectures are general, crack segmentation is an interesting example of a scenario where specifically tuned architectures can be significant. SC-CrackSeg and it's subsequent versions produced make select sacrifices in areas minimally impactful towards performance and applies specific optimisations for the crack segmentation task.
+While conventional wisdom often states the strongest machine learning architectures are general, crack segmentation is an interesting example of a scenario where specifically tuned architectures can be significant. SC-CrackSeg and its subsequent versions produced make select sacrifices in areas minimally impactful towards performance and applies specific optimisations for the crack segmentation task.
 
 The lack of an effect provided by class balancing is surprising, particularly due to effectiveness observed in other papers \cite{liu_deepcrack_2019}. It appears the effect of class imbalance is model and scenario-dependent in crack segmentation. Perhaps more of an effect would have been observed in a more complex task than crack segmentation where a larger number of classes must be balanced. In crack segmentation, predicting further crack pixels is often the only way to further reduce loss, since there are only two classes.
 
 We further discover the extreme effectiveness of SDDNet. DenSep blocks are simple, possess few parameters, and yet achieve extremely strong performance. Introduction of these blocks increases model stability and, when applied properly, the performance of SC-CrackSeg. In general, our experiments drive home that increased complexity is not necessary for the crack segmentation task, and may even be a hindrance, producing instability and overfitting. Though SDDNet is effective, our own SC-CrackSeg models may prove more effective in scenarios where computation count and model size.
 
-In general, the lack of difference between widely varying architectures was surprising - many model's top F1 scores were within 0.01 of each other, despite varying qualitative results. This may be indiciation that there are further metrics in the crack segmentation task (such as number of cracks detected) not covered by traditional qualitative metrics, and that performance in terms of qualitative metrics has been largely saturated using the chosen architectures. Skip connections were found to have positive impact due to their ability to transfer feature resolution, while upsampling was found to be surprisingly ineffective, perhaps due to its tendency to increase model size and produce overfitting.
+In general, the lack of difference between widely varying architectures was surprising - many model's top F1 scores were within 0.01 of each other, despite varying qualitative results. This indicates there are further metrics in the crack segmentation task (such as number of cracks detected) not covered by traditional qualitative metrics, and that performance in terms of qualitative metrics has been largely saturated using the chosen architectures. Skip connections were found to have positive impact due to their ability to transfer feature resolution, while upsampling was found to be surprisingly ineffective, perhaps due to its tendency to increase model size and produce overfitting.
 
 Ultimately, we introduce a number of competitive crack segmentation architectures in SC-CrackSeg and it's variations. We explore the effects of different architectural and external choices on performance in the context of crack segmentation.
 
 \section{Future work}
- [TODO]
+\begin{itemize}
+    \item \textbf{Simpler architecture} - the results compared to SDDNet indicate SC-CrackSeg's architecture may still be fundamentally too complex. Simplifying branches (as in ContextNet \cite{poudel_contextnet_2018} to Fast-SCNN \cite{poudel_fast-scnn_2019}) may result in significant cost reductions.
+    \item \textbf{Additional metrics} - Certain qualitative-level metrics may be needed to further develop meaningful improvements and comparisons in the crack segmentation space. These could include the number of cracks detected and the number of false positives, for instance.
+\end{itemize}
+
 % ------------------------------------------------------------------------------
 % Unsupervised Domain Adaptation for Segmentation
 % ------------------------------------------------------------------------------
@@ -615,11 +618,11 @@ Ultimately, we introduce a number of competitive crack segmentation architecture
 \section{Background}
 
 \subsection{Unsupervised domain adaptation}
-Unsupervised Domain Adaptation (UDA) fundamentally seeks to address the lack of large amounts of high-quality training data for machine learning tasks. A subset of transfer learning, domain adaptaion explores how to transfer knowledge learned on a labelled source domain to an unlabelled target domain, where the two domains possess the same label space but contain a domain shift. This shift may be small (e.g. one city to another) or large (synthetic to real data). Formally, consider a source dataset $D_S$ consisting of inputs $X_S$ and labels $Y_S$ as samples from an overall distribution $P_S$. Similarly, a target set $D_T$ consists of images $X_T$ from a distribution $P_T$. Critically, the labels, $Y_T$, are not available. Due to the domain shift between the datasets, we can intuit $P_T \neq P_S$, bu that  $P_S$ will be a strong starting point for learning $P_T$ due to the similarity of the domains. UDA, then, involves strategies for moving from $P_S$ to $P_T$ \cite{wilson_survey_2020}, unsupervised labels for our true desired target $P_T$ are not available.
+Unsupervised Domain Adaptation (UDA) fundamentally seeks to address the lack of large amounts of high-quality training data for machine learning tasks. A subset of transfer learning, domain adaptation explores how to transfer knowledge learned on a labelled source domain to an unlabelled target domain, where the two domains possess the same label space but contain a domain shift. This shift may be small (e.g. one city to another) or large (synthetic to real data). Formally, consider a source dataset $D_S$ consisting of inputs $X_S$ and labels $Y_S$ as samples from an overall distribution $P_S$. Similarly, a target set $D_T$ consists of images $X_T$ from a distribution $P_T$. Critically, the labels, $Y_T$, are not available. Due to the domain shift between the datasets, we can intuit $P_T \neq P_S$, but that $P_S$ will be a strong starting point for learning $P_T$ due to the similarity of the domains. UDA, then, involves strategies for moving from $P_S$ to $P_T$ \cite{wilson_survey_2020}, unsupervised labels for our true desired target $P_T$ are not available.
 
 Many fundamentally different approaches to domain adaptation exist. Two in particular have become relevant to semantic segmentation: domain-adversarial learning and self-training. Domain adversarial learning is a subset of domain invariant feature learning \cite{wilson_survey_2020}, a UDA approach based on the intuition that a model will be most successful operating on features similar to those it was trained on. In other words, this UDA approach improves performance by encouraging the model to produce features from the target set similar to those in the source set. This is usually achieved by adding another parameter to the model loss, such as the statistical distance between the source and target model's feature distributions \cite{gretton_kernel_2006} \cite{sun_return_2015}. Recently, many works \cite{ganin_unsupervised_2015} \cite{ganin_domain-adversarial_2016} instead implement an adversarial \cite{goodfellow_generative_2014} approach. One model is trained on the source/target dataset tasks, while another, the discriminator, takes features from the former as input and is trained to classify whether the features belong to the source or target dataset. The discriminator's loss is then negated and added to the original model's loss, training it to "trick" the discriminator. The intuition here is that producing source and target features that a neural network cannot distinguish is a more effective means of ensuring their similarity than traditional distances. This approach is known as domain adversarial learning \cite{ganin_domain-adversarial_2016}.
 
-Self-training, or pseudo-labelling, is another common approach. It's intuition is that the highest quality, most "confident" predictions made by a source-trained model on target data will provide more valuable than non-valuable knowledge to the model \cite{wilson_survey_2020} \cite{kamnitsas_transductive_2021}. In essence, the source-trained model makes predictions on target samples, the most confident of these predictions - known as pseudo-labels - are added to the training set, and the cycle is repeated. How the confidence of a model is determined varies. Some studies use ensemble approaches, though many semantic segmentation techniques use the magnitude of a model's softmax output as a measure of confidence, where a greater softmax value is a more confident prediction \cite{zou_domain_2018}.
+Self-training, or pseudo-labelling, is another common approach. Its intuition is that the highest quality, most "confident" predictions made by a source-trained model on target data will provide more valuable than non-valuable knowledge to the model \cite{wilson_survey_2020} \cite{kamnitsas_transductive_2021}. In essence, the source-trained model makes predictions on target samples, the most confident of these predictions - known as pseudo-labels - are added to the training set, and the cycle is repeated. How the confidence of a model is determined varies. Some studies use ensemble approaches, though many semantic segmentation techniques use the magnitude of a model's softmax output as a measure of confidence, where a greater softmax value is a more confident prediction \cite{zou_domain_2018}.
 
 \begin{figure}[h]
     \centering
@@ -631,7 +634,7 @@ Self-training, or pseudo-labelling, is another common approach. It's intuition i
 
 \subsection{Transformers for semantic segmentation}
 
-The transformer architecture revolutionised the deep learning field in 2017 \cite{vaswani_attention_2017}. Initially applied for sequence-based natural language processing (NLP) tasks, transformers propose a fundamentally different approach to CNNs. Transformers are based on the concepts of self-attention and multi-head attention. These respectively give the model the ability to determine importance between different components o fa sequence, and compute this importance in a number of different ways, simila to having multiple filters for different features in CNNs. ViT \cite{dosovitskiy_image_2021} was the first attempt to produce a fully transformer-based vision architecture (as in \cite{vaswani_attention_2017}) modified for image inputs. Rather than encoding each pixel into an input sequence (which would be prohibitively expensive), ViT groups the input image into $16 \times 16$ patches for encoding into the input sequence. Transformers became ubiquitous in NLP due to their ability to map long-distance relationships and their extreme scalability with increasing amounts of data \cite{devlin_bert_2019} \cite{radford_language_2019}. However, transformers lack the translational equivariance and locality that are believed to make CNNs so effective for vision, and experiments indeed showed that ViT is outperformed by state-of-the-art CNNs when trained on smaller datasets. However, when trained on extremely large datasets, the scalability of transformers appears to win out against these biases.
+The transformer architecture revolutionised the deep learning field in 2017 \cite{vaswani_attention_2017}. Initially applied for sequence-based natural language processing (NLP) tasks, transformers propose a fundamentally different approach to CNNs. Transformers are based on the concepts of self-attention and multi-head attention. These respectively give the model the ability to determine importance between different components o fa sequence, and compute this importance in a number of different ways, similar to having multiple filters for different features in CNNs. ViT \cite{dosovitskiy_image_2021} was the first attempt to produce a fully transformer-based vision architecture (as in \cite{vaswani_attention_2017}) modified for image inputs. Rather than encoding each pixel into an input sequence (which would be prohibitively expensive), ViT groups the input image into $16 \times 16$ patches for encoding into the input sequence. Transformers became ubiquitous in NLP due to their ability to map long-distance relationships and their extreme scalability with increasing amounts of data \cite{devlin_bert_2019} \cite{radford_language_2019}. However, transformers lack the translational equivariance and locality that are believed to make CNNs so effective for vision, and experiments indeed showed that ViT is outperformed by state-of-the-art CNNs when trained on smaller datasets. However, when trained on extremely large datasets, the scalability of transformers appears to win out against these biases.
 
 \begin{figure}[h]
     \centering
@@ -661,7 +664,7 @@ The intuition here was that, just as vision transformers outperformed existing d
 
 An intuitive approach to this problem would be to first apply a model like SegFormer to domain adaptation, first evaluating its performance in a naive setting (train on source, evaluate on target) and then using an approach tailored to domain adaptation. To avoid having to interact with many of the complexities brought on by moving from a convolutional to transformer architecture, a largely architecture-independent approach proven for segmentation, such as self-training \cite{zou_domain_2018} may be used. While this was the initial plan for this chapter of the thesis, it was also unfortunately the precise subject of the [MONTH] 2022 paper DAFormer \cite{hoyer_daformer_2022}. DAFormer identifies the extreme domain-adaptive capacity of SegFormer and improves it for the purposes of UDA. It does so by modifying the SegFormer backbone, applying class balancing, and adding novel regularisation techniques such as feature distance from features trained on the generic ImageNet dataset. As I sought to explore novel concepts and approaches, I instead shifted focus onto the other popular means of performing domain adaptation - domain-adversarial training. Domain adversarial approaches were not explored in DAFormer due to the recent success of self-training in other research and the difficulty of implementing domain adversarial methods in segmentation transformers. The challenge comes primarily from the large changes that must be made to the training pipeline - adding a peripheral network with a separate training goal - and the large number of peripheral network setups.
 
-\section{Domain adversarial segformer}
+\section{Domain Adversarial SegFormer}
 
 We here describe the experimental setup for Domain Adversarial SegFormer (DAS). Fundamentally, DAS follows the discriminator-based adversarial domain adaptation approach. Our system is trained two-fold: firstly, we perform conventional training by making our segmentation model, consisting of feature-extractor $F$ and classifier $C$, make predictions on samples $X_S$ from our source dataset, then using its labels $Y_s$ to produce the segmentation loss $\mathcal{L}_{seg}$. We then apply an adversarial discriminator $D$ to the features produced by the feature-extractor on source samples $X_S$ and unlabelled target samples $X_T$. This discriminator attempts to classify input features as belonging to the source or target distribution, and is evaluated to produce the discriminator loss $\mathcal{L}_{disc}$. The loss of the discriminator is then used to encourage the segmentation model, in theory pushing it to produce domain-invariant features and thus perform more strongly on the target set. This process can be thought of as alternately optimising the following two objectives:
 
@@ -766,7 +769,7 @@ Applying the same principle as with the patch-wise discriminator, we follow an a
     \centering
     \includegraphics[width=0.8\textwidth]{res/discriminator-diagrams/patch-convolutional-output.pdf}
     \caption{Architecture of patch-wise convolutional output-level discriminator.}
-    \label{fig:das-discriminators-output}
+    \label{fig:das-discriminators-patch-conv-output}
 \end{figure*}
 
 \subsubsection{Multi level discriminator ensemble}
@@ -818,7 +821,7 @@ To this end, we first use pixel-counting scripts to determine the class distribu
             255                                                                                    & void          & 5605086111                          & \multicolumn{1}{|l|}{-}                                                                & 850371215                                                                             & \multicolumn{1}{|l|}{-}                                                                     & \multicolumn{1}{|l|}{-}                                                                                          \\ \hline
             \multicolumn{1}{|l|}{\begin{tabular}[c]{@{}l@{}}Total \\ (Ignoring Void)\end{tabular}} & -             & 44541782793                         & 100.00                                                                                 & 6437231985                                                                            & 100.00                                                                                      & \multicolumn{1}{|l|}{}                                                                                           \\ \hline
         \end{tabular}
-        }
+    }
     \caption{Class distribution of Cityscapes \cite{cordts_cityscapes_2016} vs GTA5 \cite{richter_playing_2016} datasets.}
     \label{tab:gta-dataset-distribution}
 \end{table}
@@ -837,7 +840,7 @@ Where $c$ is the class, $f_c$ is the frequency of the class, $C$ is the number o
 \subsection{Initial Results and Experimentation}
 An interesting experiment helps demonstrate the adversarial learning approach. If the discriminator's gradient reversal layer is removed, source dataset performance will be maintained as normal, though target dataset performance will be completely destroyed, nearing 0 mIoU. This is as the segmentation network's loss function essentially becomes $\mathcal{L}_{seg} + \mathcal{L}_{disc}$ - it is encouraged to both produce maximum performance on the source set and to make it as easy as possible for the discriminator to distinguish source and target samples, consequently eliminating domain transfer knowledge from the model.
 
-Initial experiments reveal a core issue with our approach. Regardless of what combinations of simple discriminators and parameters were attempted, performance on the target dataset was reduced, not increased. While we initially believed this to be an issue in our experimental setup, we verified our methods using a baseline experiment. Taking advantage of the flexible domain adaptation built upon MMSegmentation, we attached a simple DCGAN-like output-level discriminator to DeepLabV3+ using ResNet-50. Though this was not an optimal setup, it should still be expected to produce some improvement based on existing works \cite{tsai_learning_2020}, and the model did improve DeepLabV3+'s performance in the GTA$\rightarrow$Cityscapes task (figure \ref{tab:das-baseline-experiment}). This indicates that our pipeline, while effective on existing models (and using a discriminator agnostic to feature space) improves the performance of past models but reduces the performance of SegFormer. While no specific cause could be diagnosed for this, we believe it to be an effect of transformers' baseline transferability due to self-attention \cite{dosovitskiy_image_2021} combined with the tendency for domain adversarial models to marginalise class distribution. In the case of SegFormer, the baseline model is already so effective that the improvement brought by making features domain indiscriminate is outweighed by the negative effects of marginalising the feature distribution. Throughout the rest of this chapter, we explore how different domain adversarial approaches interact with this issue and approaches to mitigate it.
+Initial experiments reveal a core issue with our approach. Regardless of what combinations of simple discriminators and parameters were attempted, performance on the target dataset was reduced, not increased. While we initially believed this to be an issue in our experimental setup, we verified our methods using a baseline experiment. Taking advantage of the flexible domain adaptation built upon MMSegmentation, we attached a simple DCGAN-like output-level discriminator to DeepLabV3+ using ResNet-50. Though this was not an optimal setup, it should still be expected to produce some improvement based on existing works \cite{tsai_learning_2020}, and the model did improve DeepLabV3+'s performance in the GTA \textrightarrow Cityscapes task (figure \ref{tab:das-baseline-experiment}). This indicates that our pipeline, while effective on existing models (and using a discriminator agnostic to feature space) improves the performance of past models but reduces the performance of SegFormer. While no specific cause could be diagnosed for this, we believe it to be an effect of transformers' baseline transferability due to self-attention \cite{dosovitskiy_image_2021} combined with the tendency for domain adversarial models to marginalise class distribution. In the case of SegFormer, the baseline model is already so effective that the improvement brought by making features domain indiscriminate is outweighed by the negative effects of marginalising the feature distribution. Throughout the rest of this chapter, we explore how different domain adversarial approaches interact with this issue and approaches to mitigate it.
 
 \begin{table}[]
     \resizebox{\textwidth}{!}{%
@@ -878,7 +881,7 @@ Many papers in the semantic segmentation space do not use gradient reversal, but
         0.1                          & Yes        & 39.46                                   &             \\ \hline
         0.01                         & Yes        & 39.28                                   &             \\ \hline
     \end{tabular}
-    \caption{Results of using different adaptation factor ($\lambda$) for GTA$\rightarrow$CS}
+    \caption{Results of using different adaptation factor ($\lambda$) for GTA \textrightarrow CS}
 \end{table}
 
 \subsection{Comparison of DAS architectures}
@@ -894,9 +897,9 @@ We assess all discriminator architectures using the same adaptation factor growt
             Linear                                 & \begin{tabular}[c]{@{}l@{}}Linear Layer ($F$ input to 768 output channels)\\ ReLU\\ LInear Layer (768 input to 768 output channels)\\ ReLU\\ Pointwise Convolutional Layer (768 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                  \\ \hline
             Convolutional                          & \begin{tabular}[c]{@{}l@{}}Convolutional Layer ($F$ input to 32 output channels)\\ Convolutional Layer (32 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                                                                                       \\ \hline
             DCGAN \cite{radford_unsupervised_2016} & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($C$ input channels, 64 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 128 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (128 input channels, 256 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (256 input channels, 512 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 2 output channels, stride 2)\\ Global average pooling\\ Sigmoid\end{tabular} \\ \hline
-            patch-wise                              & \begin{tabular}[c]{@{}l@{}}256 patches:\\ Linear layer (512 input channels, 512 // 4 = 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 2 output channels)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                                                          \\ \hline
-            Unique patch-wise                       & Same as patch-wise                                                                                                                                                                                                                                                                                                                                                                                                                                                  \\ \hline
-            Conv patch-wise                         & \begin{tabular}[c]{@{}l@{}}16 * 16 = 256 patches\\ Conv. Layer ($C$ input channels, 32 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (32 input channels, 64 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 2 output channels, stride 1)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                         \\ \hline
+            patch-wise                             & \begin{tabular}[c]{@{}l@{}}256 patches:\\ Linear layer (512 input channels, 512 // 4 = 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 2 output channels)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                                                          \\ \hline
+            Unique patch-wise                      & Same as patch-wise                                                                                                                                                                                                                                                                                                                                                                                                                                                 \\ \hline
+            Conv patch-wise                        & \begin{tabular}[c]{@{}l@{}}16 * 16 = 256 patches\\ Conv. Layer ($C$ input channels, 32 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (32 input channels, 64 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 2 output channels, stride 1)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                         \\ \hline
             FADA \cite{wang_classes_2020}          & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($F$ input channels, 512 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 256 output channels, stride 1)\\ Leaky ReLU\\ 2 $\times$ Conv. Layer (256 input channels, $C$ output channels, stride 1)\\ Concatenate previous 2 channels\end{tabular}                                                                                                                                                 \\ \hline
         \end{tabular}
     }
@@ -913,17 +916,25 @@ Following \cite{tsai_learning_2020}, we deploy discriminators in the final 2 lay
 
 Existing works \cite{chen_learning_2017} \cite{csurka_unsupervised_2021} \cite{ronneberger_u-net_2015} establish that the complex semantic segmentation task often means a single-point of feature alignment is not sufficient for performing accurate domain adaptation. Therefore, we apply ensembles combinations of our most successful discriminators to domain adaptation.
 
+    [TODO results writing]
+    [TODO results table]
+
 \subsection{Distribution alignment approaches}
 We keep the loss factor for class distribution loss large (1.0) as the loss produced by the function itself is small.
+
+    [TODO results writing]
+    [TODO results table]
 
 \subsection{General comments}
 \subsubsection{Efficiency}
 Compared to DAFormer, significantly less work is done during most DAS training approaches. Experiment duration is typically significantly shorter - DAFormer MiT-B3 experiments take around 12 hours on a 2080Ti GPU, while many DAS experiments require less than 6 hours. However, this comes at the cost of memory efficiency during training. While DAFormer is capable of running MitB5 training on a 12GB 2080Ti GPU, DAS is only capable of running all experiments using the smaller MiTB3 architecture. The increased memory cost could be somewhat mitigated by avoiding using gradient reversal and instead performing model inferences separately, but this would increase inference time and code complexity.
 
 \section{Conclusion}
-Though disappointing, we believe the comprehensive results provided in this chapter are still valuable.
-- Think transformers dynamically adapting themselves might be the cause of these issues.
-In addition, the creation of an adaptive framework for domain adversarial semantic segmentation (though still in need of improvements and documentation) provides its own value.
+The complexity of semantic segmentation models continues to grow, and our failure to apply a technique dependent on simplicity in this chapter demonstrates this. We believe that the inherent domain adaptivity and ability to dynamically scale weights of SegFormer is only hindered by the distribution marginalisation brought by an adversarial discriminator, thus producing the worse-than-baseline results we observe.
+
+We do not doubt it is possible to achieve improvement using domain-adversarial training in our experimental setup, but find that using techniques established in this domain do not seem to make it possible. Though disappointing, we believe the comprehensive results provided are still valuable. While DAFormer brought extremely strong results, it explicitly avoided exploring domain adversarial training, and these results act reinforce that self-training may have significantly more potential.
+
+In addition, the creation of an adaptive framework for domain adversarial semantic segmentation (though still in need of improvements and documentation) provides its own value, and we hope it will provide a framework that others will be able to build upon.
 
 \section{Future work}
 \begin{itemize}
@@ -951,7 +962,9 @@ MobileViT \cite{mehta_mobilevit_2022} is an early popular approach, which introd
     \label{fig:mobilevit_block}
 \end{figure}
 
-Other approaches seeking efficiency combine CNNs and transformers more directly. Mobile-Former \cite{chen_mobile-former_2022} runs MobileNet and transformer blocks in parallel to achieve performance and efficiency gains over MobileNetV3, though at a still high number of FLOPs and parameters. More recently, TopFormer \cite{zhang_topformer_2022} focuses specifically on fast transformer-based segmentation by using a feature pyramid-like design. First, MobileNet blocks are used to build a multiscale feature pyramid to reduce input dimension (down to $\frac{1}{64}$ of target size). All block output tokens are then average pooled to the size of the smallest and concatenated. After patch embedding, these tokens are passed through a standard vision transformer. The tokens are then reshaped, de-concatenated, and upsampled before being combined with their original counterparts. The final tokens are then combined in a convolution-based gradual upsampling process, similar to U-Net \cite{ronneberger_u-net_2015} and approaches discussed in chapter 2. The benefit of this approach is tow-fold: CNN inductive biases are applied during downsampling and upsampling and the global receptive field of transformers is applied at low convolutional cost due to the small input size. The transformer's attention also enables the sharing of features across resolutions. TopFormer achieves particularly strong results on the challenging ADE20K dataset, known for its complex scenery.
+Other approaches seeking efficiency combine CNNs and transformers more directly.
+
+Mobile-Former \cite{chen_mobile-former_2022} runs MobileNet and transformer blocks in parallel to achieve performance and efficiency gains over MobileNetV3, though at a still high number of FLOPs and parameters. More recently, TopFormer \cite{zhang_topformer_2022} focuses specifically on fast transformer based segmentation by using a feature pyramid-like design. First, MobileNet blocks are used to build a multiscale feature pyramid to reduce input dimension (down to $\frac{1}{64}$ of target size). All block output tokens are then average pooled to the size of the smallest and concatenated. After patch embedding, these tokens are passed through a standard vision transformer. The tokens are then reshaped, de-concatenated, and upsampled before being combined with their original counterparts. The final tokens are then combined in a convolution-based gradual upsampling process, similar to U-Net \cite{ronneberger_u-net_2015} and approaches discussed in chapter 2. The benefit of this approach is tow-fold: CNN inductive biases are applied during downsampling and upsampling and the global receptive field of transformers is applied at low convolutional cost due to the small input size. The transformer's attention also enables the sharing of features across resolutions. TopFormer achieves particularly strong results on the challenging ADE20K dataset, known for its complex scenery.
 
 % "MobileNet convolutional" CHECK IF IT SHOULD BE BOTTLENECK?
 
@@ -975,8 +988,27 @@ We first compare source-only performance. Fast-SCNN performs poorly, indicating 
             TopFormer (Tiny)     & 1.4M                                                      & \textbf{1.39}                                                                       & -                                                                     & 0.58                                                                                       & 27.78                                                                              & 36.98                                                                      \\ \hline
         \end{tabular}
     }
-    \caption{Performance comparison of lightweight segmentation models on GTA$\rightarrow$CS, with both source-only and self-training approaches.}
+    \caption{Performance comparison of lightweight segmentation models on GTA \textrightarrow CS, with both source-only and self-training approaches.}
     \label{tab:lightweit-da-baseline}
+\end{table}
+
+\begin{table}[]
+    % \resizebox{\textwidth}{!}{%
+    \centering
+        \begin{tabular}{lll}
+            Ground Truth       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/image.png}                         & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/ground-truth.png}                    \\
+            \textbf{Model}     & \textbf{Source-Only}                                                                                                      & \textbf{Self-Training}                                                                                                      \\
+            Topformer-Base     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-selftraining.png}     \\
+            Topformer-Tiny     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-selftraining.png}     \\
+            MobileViT-Small    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-sourceonly.png}    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-selftraining.png}    \\
+            MobileViT-XX-Small & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-selftraining.png} \\
+            Fast-SCNN          & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/fast-scnn-sourceonly.png}          & N/A                                                                                                                         \\
+            SegFormer-B0       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-selftraining.png}     \\
+            DAFormer-B0        & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-selftraining.png}      \\
+        \end{tabular}
+    % }
+    \caption{Qualitative baseline experiment results.}
+    \label{fig: lightweight-model-baseline}
 \end{table}
 
 \section{Applying UDA methods}
@@ -1005,15 +1037,52 @@ Our Pseudo-Teacher method follows this approach by having the student learn from
 Many existing approaches are similar to our pseudo-teacher UDA. Knowledge distillation involves using the soft outputs of a larger model to train a smaller one, with the soft outputs allowing the small model to learn how to represent features. An industry approach sometimes known as autolabelling involves using a pre-trained neural network to predict on many unlabelled samples, then manually adjusting these samples to quickly produce large datasets. However, our approach does not use soft labels for simplicity, and is targeted specifically at teaching domain-adapted features.
 
 \subsection{Experimental Results}
-As TopFormer was the best efficient network for source-only training (and pseudo-teacher UDA does not involve other means of UDA), we opted to use it for our experiments. As with other UDA tasks, we do not allow our model, including the teacher model, to see validation set images during training. Even if the labels are not available, we use the validation set to represent future unseen data, therefore not present in training.
+As TopFormer was the best efficient network for source-only training (and pseudo-teacher UDA does not involve other means of UDA), we opted to use it for our experiments. As with other UDA tasks, we do not allow our model, including the teacher model, to see validation set images during training.
+
+\begin{table}[]
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{|l|l|r|r|r|r|}
+            \hline
+            Model             & Approach       & \multicolumn{1}{l|}{Source-Only} & \multicolumn{1}{l|}{With UDA} & \multicolumn{1}{l|}{Oracle} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Relative \\ Performance\end{tabular}} \\ \hline
+            TopFormer-Base    & Pseudo-Teacher & \textbf{33.32}                   & \textbf{61.18}                & 66.56                       & 91.92\%                                                                              \\ \hline
+            TopFormer-Tiny    & Pseudo-Teacher & 27.78                            & 56.26                         & 59.39                       & \textbf{94.73\%}                                                                     \\ \hline
+            DAFormer (MiT-B0) & Self-Training  & 28.12                            & 47.55                         & \textbf{70.78}              & 67.18\%                                                                              \\ \hline
+        \end{tabular}
+    }
+    \caption{Results of Pseudo-Teacher UDA on GTA \textrightarrow CS}
+\end{table}
+
+TopFormer's pseudo-teacher results are extremely impressive. With only ImageNet pre-training, TopFormer is able to achieve 61.18 mean IoU using the teacher labels, an almost 40\% improvement over performing direct self-training with the most lightweight DAFormer. It achieves all this while still possessing significantly fewer parameters (figure \ref{tab:lightweit-da-baseline}). TopFormer-Tiny also sees an incredible jump in performance, and both models achieve results near 90\% of those we observe when the training set is made available. This indicates that, even though the DAFormer-B5 teacher only achieves 68.3 mIoU on the dataset itself, the smaller models are able to accurately learn the most relevant information to achieve similar results. In the qualitative results, the efficient model's ability to mirror fine details like signs and traffic lights is significantly of note, previously not seen in UDA with efficient models.
+
+\begin{table}[]
+    \resizebox{\textwidth}{!}{%
+        \begin{tabular}{lllll}
+            \centering
+            \textbf{Model} & \textbf{Approach} & \textbf{Source-Only}                                                                                        & \textbf{UDA}                                                                                                    & \textbf{Oracle}                                                                                         \\
+            Topformer-Base & Pseudo-Teacher    & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-pseudo-teacher.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-oracle.png} \\
+            Topformer-Tiny & Pseudo-Teacher    & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-pseudo-teacher.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-oracle.png} \\
+            daformer       & Pseudo-Teacher    & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/daformer-sourceonly.png}       & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/daformer-uda.png}                  & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/daformer-oracle.png}       \\
+        \end{tabular}
+    }
+    \caption{Qualitative results of Pseudo-Teacher approach.}
+    \label{fig:pseudo-teacher-qualitative}
+\end{table}
 
 Pre-training on the GTA dataset significantly reduced performance, the opposite of what was expected. This may be as the model is in a more generalisable state with only an ImageNet pre-trained backbone.
 
+It is worth noting that the actual "oracle" accuracies of TopFormer are likely higher, but reduced due to nuances in our training approach, such as the use of $512 \times 512$ patches. TopFormer-base, for instance, reportedly achieves 75.0 mIoU when trained at full resolution \cite{zhang_topformer_2022}.
 
-\section{Conclusion}
- [TODO]
-That training a small model on a domain-adaptive model's outputs would yield good results may not itself be surprising. What is surprising, however, is the extreme extent of this performance increase. Performance with TopFormer, for instance, is almost comparable to that of training with the target labels. 
+
+\section{Conclusions}
+We believe the under-explored domain of domain adaptation for efficient semantic segmentation has significant potential. Even in the simple approach we demonstrate here, we achieve extremely strong results. That training a small model on a domain-adaptive model's outputs would yield good results may not itself be surprising, but the extent of the performance increase is. Performance with TopFormer, for instance, is almost comparable to that of training with the target labels.
 While this approach does not improve training-time speed, we do not consider a one-time training cost equivalent to approximately ~16 GPU hours with a single RTX 2080Ti prohibitively costly.
+
+\section{Future work}
+\begin{itemize}
+    \item \textbf{Distillation} - The current approach simply trains the student model on the pseudo-teacher's output. Subsequent approaches could further communicate representation information by applying distillation techniques.
+    \item \textbf{Application of domain adaptation techniques} - Domain adaptation techniques are used extensively in the teacher, but not the student. Taking advantage of target labels or applying domain regularisation techniques may further improve performance
+    \item \textbf{Improving training time} - While the inference model is lightweight, training cost is limited by training of the teacher model. It may be beneficial to investigate memory usage specifically, as this will likely be a bottleneck for any application contexts where resources are limited.
+\end{itemize}
 
 \FloatBarrier
 
@@ -1025,6 +1094,7 @@ While this approach does not improve training-time speed, we do not consider a o
 % \end{figure}
 
 \chapter{Conclusion}
+Semantic segmentation may be a fundamental task for computer vision, but its application in real-world scenarios requires extensive consideration. Through the development of SC-CrackSeg, we demonstrate it is possible to improve an application-level problem within semantic segmentation through the careful consideration of architecture. We also demonstrate that the ever-growing expressive potential of segmentation models is leaving certain approaches behind: While domain adversarial training had seen success in segmentation in the past, the dynamic adaptivity of transformer encoders combined with the nuanced feature space left us unable to make any improvement over baseline approaches. However, we find many specific application-level techniques remain unexplored. Through the application of our simple yet extremely effective pseudo-teacher approach, we allow lightweight segmentation models to achieve UDA performance that approaches results when target labels are available.
 
 % \section{acknowledgement}
 % Supervisors - Aneesh & Sonny
