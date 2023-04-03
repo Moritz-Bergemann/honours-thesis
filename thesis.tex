@@ -89,7 +89,7 @@
         School of Electrical Engineering, Computing and Mathematical Sciences\\
         Curtin University\\
         Australia\\
-        November 2022
+        April 2023
 
     \end{center}
 \end{titlepage}
@@ -910,20 +910,64 @@ We assess all discriminator architectures using the same adaptation factor growt
 \subsubsection{Individual Discriminators}
 Unfortunately, all tested discriminators were unable to surpass the baseline performance of SegFormer-MiTB3. Some discriminators had significantly less negative effects than others. The patch-wise discriminators performed strongest, which may be as its focus on individual patches minimally marginalises the overall distribution. However, the unique patch-wise discriminator only performed very slightly better than the patch-wise using the same weights for all patches, indicating avoiding marginalisation at this level is not relevant to domain transfer. Linear discriminators also performed strongly, suggesting discriminators aligned with the structure of the remaining model may be beneficial. The patch-wise discriminator mirrors the SegFormer blocks, while the linear discriminator is modelled after SegFormer's decoder. Surprisingly, the convolutional patch-wise discriminator performed extremely poorly, unlike its feature patch-wise counterpart. Investigation found no implementation issues, and integrated evaluation metrics show the discriminator is predicting accurately (~80\% accuracy).
 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|r|}
+        \hline
+        Discriminator     & Position   & \multicolumn{1}{l|}{mIoU} \\ \hline
+        Linear            & Last Feat. & 40.11                     \\ \hline
+        Convolutional     & Last Feat. & 38.95                     \\ \hline
+        DCGAN             & Output     & 39.65                     \\ \hline
+        Patch-Wise        & Last Feat. & 40.41                     \\ \hline
+        Unique Patch-Wise & Last Feat. & 40.4                      \\ \hline
+        Conv Patch-wise   & Output     & 6.88                      \\ \hline
+    \end{tabular}
+\end{table}
+
 \subsubsection{Ensemble methods}
-Surprisingly, ensemble methods did not outperform their individual counterparts. Using the results from the individual discriminators, two discriminator ensembles were produced.
-Following \cite{tsai_learning_2020}, we deploy discriminators in the final 2 layers of the model.
+Our ensembles consisted of a feature-level ensemble (using patch discriminators) and a feature-output level ensemble, using patch and DCGAN-like discriminators. Following \cite{tsai_learning_2020}, we deploy discriminators in the final 2 layers of the model. For memory-related reasons, the DCGAN discriminator was reduced in size.
 
-Existing works \cite{chen_learning_2017} \cite{csurka_unsupervised_2021} \cite{ronneberger_u-net_2015} establish that the complex semantic segmentation task often means a single-point of feature alignment is not sufficient for performing accurate domain adaptation. Therefore, we apply ensembles combinations of our most successful discriminators to domain adaptation.
+\begin{table}[]
+    \centering
+    \begin{tabular}{|l|r|}
+        \hline
+        Ensemble                      & \multicolumn{1}{l|}{mIoU} \\ \hline
+        2 feature-level patch         & 39.32                     \\ \hline
+        2 feature-level patch + DCGAN & 34.43                     \\ \hline
+    \end{tabular}
+    \caption{Results of ensemble discriminators on DAS.}
+\end{table}
 
-    [TODO results writing]
-    [TODO results table]
+Surprisingly, ensemble methods did not outperform their individual counterparts. We expected the ensembles to aid in the alignment of the overall feature space as in previous approaches \cite{hoffman_fcns_2016} \cite{chen_learning_2017}, but found this not to be the case. This may be as the issue of class-level alignment or dynamic feature marginalisation is present at a deeper level.
 
 \subsection{Distribution alignment approaches}
-We keep the loss factor for class distribution loss large (1.0) as the loss produced by the function itself is small.
+We keep the loss factor for class distribution loss large (1.0) as the loss produced by the function itself is small. Due to memory restrictions, we were forced to use the simpler DCGAN disc instead of patch-wise discriminators for this stage.
 
-    [TODO results writing]
-    [TODO results table]
+\begin{figure}[]
+    \centering
+    \begin{tabular}{|l|l|r|}
+        \hline
+        Auxiliary Method            & Discriminator & \multicolumn{1}{l|}{mIoU} \\ \hline
+        RCS                         & DCGAN         & \textbf{44.76}            \\ \hline
+        Class distribution matching & DCGAN         & 39.4                      \\ \hline
+        Fine class matching         & DCGAN         & 37.22                     \\ \hline
+        Source-Only                 & -             & 41.78                     \\ \hline
+    \end{tabular}
+    \caption{Results of auxiliary approaches on DAS. Adding RCS improves performance over baseline.}
+\end{figure}
+
+Distribution alignment approaches finally allowed us to improve over baseline performance. The addition of RCS increased mIoU to 44.76, over the baseline 41.78, and qualitative results show visible improvement (figure \ref{fig:das-qualitative}). These results prove that it is possible to SegFormer over source-only performance using adversarial discriminators, and that at least part of the issue is related to class marginalisation and can be addressed through oversampling of rare classes. Disappointingly, neither FADA nor class distribution matching were able to mirror these results.
+
+\begin{figure}[]
+    % \resizebox{\textwidth}{!}{%
+    \centering
+    \begin{tabular}{llll}
+        Source Image & Ground Truth & Source-Only & DCGAN + RCS \\ 
+        \includegraphics[width=.2\linewidth,valign=m]{res/das-qualitative/image.png} & \includegraphics[width=.2\linewidth,valign=m]{res/das-qualitative/ground-truth.png} & \includegraphics[width=.2\linewidth,valign=m]{res/das-qualitative/source-only.png} & \includegraphics[width=.2\linewidth,valign=m]{res/das-qualitative/dcgan-rcs.png}\\
+    \end{tabular}
+    \caption{Comparison of DCGAN + RCS DAS against source-only training.}
+    \label{fig:das-qualitative}
+\end{figure}
 
 \subsection{General comments}
 \subsubsection{Efficiency}
@@ -992,24 +1036,24 @@ We first compare source-only performance. Fast-SCNN performs poorly, indicating 
     \label{tab:lightweit-da-baseline}
 \end{table}
 
-\begin{table}[]
+\begin{figure}[]
     % \resizebox{\textwidth}{!}{%
     \centering
-        \begin{tabular}{lll}
-            Ground Truth       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/image.png}                         & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/ground-truth.png}                    \\
-            \textbf{Model}     & \textbf{Source-Only}                                                                                                      & \textbf{Self-Training}                                                                                                      \\
-            Topformer-Base     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-selftraining.png}     \\
-            Topformer-Tiny     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-selftraining.png}     \\
-            MobileViT-Small    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-sourceonly.png}    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-selftraining.png}    \\
-            MobileViT-XX-Small & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-selftraining.png} \\
-            Fast-SCNN          & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/fast-scnn-sourceonly.png}          & N/A                                                                                                                         \\
-            SegFormer-B0       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-selftraining.png}     \\
-            DAFormer-B0        & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-selftraining.png}      \\
-        \end{tabular}
+    \begin{tabular}{lll}
+        Ground Truth       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/image.png}                         & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/ground-truth.png}                    \\
+        \textbf{Model}     & \textbf{Source-Only}                                                                                                      & \textbf{Self-Training}                                                                                                      \\
+        Topformer-Base     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-base-selftraining.png}     \\
+        Topformer-Tiny     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/topformer-tiny-selftraining.png}     \\
+        MobileViT-Small    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-sourceonly.png}    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-small-selftraining.png}    \\
+        MobileViT-XX-Small & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/mobilevit-xx-small-selftraining.png} \\
+        Fast-SCNN          & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/fast-scnn-sourceonly.png}          & N/A                                                                                                                         \\
+        SegFormer-B0       & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-sourceonly.png}    & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/segformer-mitb0-selftraining.png}    \\
+        DAFormer-B0        & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-sourceonly.png}     & \includegraphics[width=.2\linewidth,valign=m]{res/lightweight-uda-baseline-qualitative/daformer-mitb0-selftraining.png}     \\
+    \end{tabular}
     % }
     \caption{Qualitative baseline experiment results.}
     \label{fig: lightweight-model-baseline}
-\end{table}
+\end{figure}
 
 \section{Applying UDA methods}
 We subsequently attempt to apply the state-of-the-art DAFormer self-training strategies to the provided models.
@@ -1058,6 +1102,7 @@ TopFormer's pseudo-teacher results are extremely impressive. With only ImageNet 
     \resizebox{\textwidth}{!}{%
         \begin{tabular}{lllll}
             \centering
+            Ground Truth   &                   & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/image.png}                     & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/ground-truth.png}                  &                                                                                                         \\
             \textbf{Model} & \textbf{Approach} & \textbf{Source-Only}                                                                                        & \textbf{UDA}                                                                                                    & \textbf{Oracle}                                                                                         \\
             Topformer-Base & Pseudo-Teacher    & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-pseudo-teacher.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-base-oracle.png} \\
             Topformer-Tiny & Pseudo-Teacher    & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-sourceonly.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-pseudo-teacher.png} & \includegraphics[width=.2\linewidth,valign=m]{res/pseudo-teacher-qualitative/topformer-tiny-oracle.png} \\
