@@ -1653,7 +1653,6 @@
 	shorttitle = {{DAFormer}},
 	url = {http://arxiv.org/abs/2111.14887},
 	doi = {10.48550/arXiv.2111.14887},
-	abstract = {As acquiring pixel-wise annotations of real-world images for semantic segmentation is a costly process, a model can instead be trained with more accessible synthetic data and adapted to real images without requiring their annotations. This process is studied in unsupervised domain adaptation (UDA). Even though a large number of methods propose new adaptation strategies, they are mostly based on outdated network architectures. As the influence of recent network architectures has not been systematically studied, we first benchmark different network architectures for UDA and newly reveal the potential of Transformers for UDA semantic segmentation. Based on the findings, we propose a novel UDA method, DAFormer. The network architecture of DAFormer consists of a Transformer encoder and a multi-level context-aware feature fusion decoder. It is enabled by three simple but crucial training strategies to stabilize the training and to avoid overfitting to the source domain: While (1) Rare Class Sampling on the source domain improves the quality of the pseudo-labels by mitigating the confirmation bias of self-training toward common classes, (2) a Thing-Class ImageNet Feature Distance and (3) a learning rate warmup promote feature transfer from ImageNet pretraining. DAFormer represents a major advance in UDA. It improves the state of the art by 10.8 mIoU for GTA-to-Cityscapes and 5.4 mIoU for Synthia-to-Cityscapes and enables learning even difficult classes such as train, bus, and truck well. The implementation is available at https://github.com/lhoyer/DAFormer.},
 	urldate = {2023-02-19},
 	publisher = {arXiv},
 	author = {Hoyer, Lukas and Dai, Dengxin and Van Gool, Luc},
@@ -1661,7 +1660,6 @@
 	year = {2022},
 	note = {arXiv:2111.14887 [cs]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/9EWNPK5R/Hoyer et al. - 2022 - DAFormer Improving Network Architectures and Trai.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/B4MQVQMI/2111.html:text/html},
 }
 
 @article{kochkarev_data_2020,
@@ -1675,14 +1673,12 @@
 	month = dec,
 	year = {2020},
 	pages = {short19--1--short19--9},
-	file = {Kochkarev et al. - 2020 - Data Balancing Method for Training Segmentation Ne.pdf:/home/moritz/snap/zotero-snap/common/Zotero/storage/5LBMBB9X/Kochkarev et al. - 2020 - Data Balancing Method for Training Segmentation Ne.pdf:application/pdf},
 }
 
 @article{kochkarev_data_2020-1,
 	title = {Data {Balancing} {Method} for {Training} {Segmentation} {Neural} {Networks}},
 	url = {http://ceur-ws.org/Vol-2744/short19.pdf},
 	doi = {10.51130/graphicon-2020-2-4-19},
-	abstract = {Data imbalance is a common problem in machine learning and image processing. The lack of training data for the rarest classes can lead to worse learning ability and negatively affect the quality of segmentation. In this paper we focus on the problem of data balancing for the task of image segmentation. We review major trends in handling unbalanced data and propose a new method for data balancing, based on Distance Transform. This method is designed for using in segmentation convolutional neural networks (CNNs), but it is universal and can be used with any patch-based segmentation machine learning model. The evaluation of the proposed data balancing method is performed on two datasets. The ﬁrst is medical dataset LiTS, containing CT images of liver with tumor abnormalities. Second one is a geological dataset, containing of photographs of polished sections of different ores. The proposed algorithm enhances the data balance between classes and improves the overall performance of CNN model.},
 	language = {en},
 	urldate = {2023-02-23},
 	journal = {Proceedings of the 30th International Conference on Computer Graphics and Machine Vision (GraphiCon 2020). Part 2},
@@ -1690,14 +1686,12 @@
 	month = dec,
 	year = {2020},
 	pages = {short19--1--short19--9},
-	file = {Kochkarev et al. - 2020 - Data Balancing Method for Training Segmentation Ne.pdf:/home/moritz/snap/zotero-snap/common/Zotero/storage/NVEECJS9/Kochkarev et al. - 2020 - Data Balancing Method for Training Segmentation Ne.pdf:application/pdf},
 }
 
 @misc{wilson_survey_2020,
 	title = {A {Survey} of {Unsupervised} {Deep} {Domain} {Adaptation}},
 	url = {http://arxiv.org/abs/1812.02849},
 	doi = {10.48550/arXiv.1812.02849},
-	abstract = {Deep learning has produced state-of-the-art results for a variety of tasks. While such approaches for supervised learning have performed well, they assume that training and testing data are drawn from the same distribution, which may not always be the case. As a complement to this challenge, single-source unsupervised domain adaptation can handle situations where a network is trained on labeled data from a source domain and unlabeled data from a related but different target domain with the goal of performing well at test-time on the target domain. Many single-source and typically homogeneous unsupervised deep domain adaptation approaches have thus been developed, combining the powerful, hierarchical representations from deep learning with domain adaptation to reduce reliance on potentially-costly target data labels. This survey will compare these approaches by examining alternative methods, the unique and common elements, results, and theoretical insights. We follow this with a look at application areas and open research directions.},
 	urldate = {2023-03-07},
 	publisher = {arXiv},
 	author = {Wilson, Garrett and Cook, Diane J.},
@@ -1705,14 +1699,12 @@
 	year = {2020},
 	note = {arXiv:1812.02849 [cs, stat]},
 	keywords = {Computer Science - Machine Learning, Statistics - Machine Learning},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/WBUD6G2S/Wilson and Cook - 2020 - A Survey of Unsupervised Deep Domain Adaptation.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/SCL4XVII/1812.html:text/html},
 }
 
 @misc{tsai_learning_2020,
 	title = {Learning to {Adapt} {Structured} {Output} {Space} for {Semantic} {Segmentation}},
 	url = {http://arxiv.org/abs/1802.10349},
 	doi = {10.48550/arXiv.1802.10349},
-	abstract = {Convolutional neural network-based approaches for semantic segmentation rely on supervision with pixel-level ground truth, but may not generalize well to unseen image domains. As the labeling process is tedious and labor intensive, developing algorithms that can adapt source ground truth labels to the target domain is of great interest. In this paper, we propose an adversarial learning method for domain adaptation in the context of semantic segmentation. Considering semantic segmentations as structured outputs that contain spatial similarities between the source and target domains, we adopt adversarial learning in the output space. To further enhance the adapted model, we construct a multi-level adversarial network to effectively perform output space domain adaptation at different feature levels. Extensive experiments and ablation study are conducted under various domain adaptation settings, including synthetic-to-real and cross-city scenarios. We show that the proposed method performs favorably against the state-of-the-art methods in terms of accuracy and visual quality.},
 	urldate = {2023-03-09},
 	publisher = {arXiv},
 	author = {Tsai, Yi-Hsuan and Hung, Wei-Chih and Schulter, Samuel and Sohn, Kihyuk and Yang, Ming-Hsuan and Chandraker, Manmohan},
@@ -1720,7 +1712,6 @@
 	year = {2020},
 	note = {arXiv:1802.10349 [cs]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/W2JWP4SN/Tsai et al. - 2020 - Learning to Adapt Structured Output Space for Sema.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/DL65I7DJ/1802.html:text/html},
 }
 
 @misc{wang_classes_2020,
@@ -1728,7 +1719,6 @@
 	shorttitle = {Classes {Matter}},
 	url = {http://arxiv.org/abs/2007.09222},
 	doi = {10.48550/arXiv.2007.09222},
-	abstract = {Despite great progress in supervised semantic segmentation,a large performance drop is usually observed when deploying the model in the wild. Domain adaptation methods tackle the issue by aligning the source domain and the target domain. However, most existing methods attempt to perform the alignment from a holistic view, ignoring the underlying class-level data structure in the target domain. To fully exploit the supervision in the source domain, we propose a fine-grained adversarial learning strategy for class-level feature alignment while preserving the internal structure of semantics across domains. We adopt a fine-grained domain discriminator that not only plays as a domain distinguisher, but also differentiates domains at class level. The traditional binary domain labels are also generalized to domain encodings as the supervision signal to guide the fine-grained feature alignment. An analysis with Class Center Distance (CCD) validates that our fine-grained adversarial strategy achieves better class-level alignment compared to other state-of-the-art methods. Our method is easy to implement and its effectiveness is evaluated on three classical domain adaptation tasks, i.e., GTA5 to Cityscapes, SYNTHIA to Cityscapes and Cityscapes to Cross-City. Large performance gains show that our method outperforms other global feature alignment based and class-wise alignment based counterparts. The code is publicly available at https://github.com/JDAI-CV/FADA.},
 	urldate = {2023-03-09},
 	publisher = {arXiv},
 	author = {Wang, Haoran and Shen, Tong and Zhang, Wei and Duan, Lingyu and Mei, Tao},
@@ -1736,14 +1726,12 @@
 	year = {2020},
 	note = {arXiv:2007.09222 [cs]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/WDA9JRCJ/Wang et al. - 2020 - Classes Matter A Fine-grained Adversarial Approac.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/AACVT9F4/2007.html:text/html},
 }
 
 @misc{michieli_adversarial_2020,
 	title = {Adversarial {Learning} and {Self}-{Teaching} {Techniques} for {Domain} {Adaptation} in {Semantic} {Segmentation}},
 	url = {http://arxiv.org/abs/1909.00781},
 	doi = {10.48550/arXiv.1909.00781},
-	abstract = {Deep learning techniques have been widely used in autonomous driving systems for the semantic understanding of urban scenes. However, they need a huge amount of labeled data for training, which is difficult and expensive to acquire. A recently proposed workaround is to train deep networks using synthetic data, but the domain shift between real world and synthetic representations limits the performance. In this work, a novel Unsupervised Domain Adaptation (UDA) strategy is introduced to solve this issue. The proposed learning strategy is driven by three components: a standard supervised learning loss on labeled synthetic data; an adversarial learning module that exploits both labeled synthetic data and unlabeled real data; finally, a self-teaching strategy applied to unlabeled data. The last component exploits a region growing framework guided by the segmentation confidence. Furthermore, we weighted this component on the basis of the class frequencies to enhance the performance on less common classes. Experimental results prove the effectiveness of the proposed strategy in adapting a segmentation network trained on synthetic datasets, like GTA5 and SYNTHIA, to real world datasets like Cityscapes and Mapillary.},
 	urldate = {2023-03-11},
 	publisher = {arXiv},
 	author = {Michieli, Umberto and Biasetton, Matteo and Agresti, Gianluca and Zanuttigh, Pietro},
@@ -1751,14 +1739,12 @@
 	year = {2020},
 	note = {arXiv:1909.00781 [cs, eess]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning, Electrical Engineering and Systems Science - Image and Video Processing},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/J3G9C2G8/Michieli et al. - 2020 - Adversarial Learning and Self-Teaching Techniques .pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/4CMPNXXE/1909.html:text/html},
 }
 
 @misc{howard_searching_2019,
 	title = {Searching for {MobileNetV3}},
 	url = {http://arxiv.org/abs/1905.02244},
 	doi = {10.48550/arXiv.1905.02244},
-	abstract = {We present the next generation of MobileNets based on a combination of complementary search techniques as well as a novel architecture design. MobileNetV3 is tuned to mobile phone CPUs through a combination of hardware-aware network architecture search (NAS) complemented by the NetAdapt algorithm and then subsequently improved through novel architecture advances. This paper starts the exploration of how automated search algorithms and network design can work together to harness complementary approaches improving the overall state of the art. Through this process we create two new MobileNet models for release: MobileNetV3-Large and MobileNetV3-Small which are targeted for high and low resource use cases. These models are then adapted and applied to the tasks of object detection and semantic segmentation. For the task of semantic segmentation (or any dense pixel prediction), we propose a new efficient segmentation decoder Lite Reduced Atrous Spatial Pyramid Pooling (LR-ASPP). We achieve new state of the art results for mobile classification, detection and segmentation. MobileNetV3-Large is 3.2{\textbackslash}\% more accurate on ImageNet classification while reducing latency by 15{\textbackslash}\% compared to MobileNetV2. MobileNetV3-Small is 4.6{\textbackslash}\% more accurate while reducing latency by 5{\textbackslash}\% compared to MobileNetV2. MobileNetV3-Large detection is 25{\textbackslash}\% faster at roughly the same accuracy as MobileNetV2 on COCO detection. MobileNetV3-Large LR-ASPP is 30{\textbackslash}\% faster than MobileNetV2 R-ASPP at similar accuracy for Cityscapes segmentation.},
 	urldate = {2023-03-17},
 	publisher = {arXiv},
 	author = {Howard, Andrew and Sandler, Mark and Chu, Grace and Chen, Liang-Chieh and Chen, Bo and Tan, Mingxing and Wang, Weijun and Zhu, Yukun and Pang, Ruoming and Vasudevan, Vijay and Le, Quoc V. and Adam, Hartwig},
@@ -1766,7 +1752,6 @@
 	year = {2019},
 	note = {arXiv:1905.02244 [cs]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/AFH73BNL/Howard et al. - 2019 - Searching for MobileNetV3.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/4MY7APR8/1905.html:text/html},
 }
 
 @misc{chen_mobile-former_2022,
@@ -1774,7 +1759,6 @@
 	shorttitle = {Mobile-{Former}},
 	url = {http://arxiv.org/abs/2108.05895},
 	doi = {10.48550/arXiv.2108.05895},
-	abstract = {We present Mobile-Former, a parallel design of MobileNet and transformer with a two-way bridge in between. This structure leverages the advantages of MobileNet at local processing and transformer at global interaction. And the bridge enables bidirectional fusion of local and global features. Different from recent works on vision transformer, the transformer in Mobile-Former contains very few tokens (e.g. 6 or fewer tokens) that are randomly initialized to learn global priors, resulting in low computational cost. Combining with the proposed light-weight cross attention to model the bridge, Mobile-Former is not only computationally efficient, but also has more representation power. It outperforms MobileNetV3 at low FLOP regime from 25M to 500M FLOPs on ImageNet classification. For instance, Mobile-Former achieves 77.9{\textbackslash}\% top-1 accuracy at 294M FLOPs, gaining 1.3{\textbackslash}\% over MobileNetV3 but saving 17{\textbackslash}\% of computations. When transferring to object detection, Mobile-Former outperforms MobileNetV3 by 8.6 AP in RetinaNet framework. Furthermore, we build an efficient end-to-end detector by replacing backbone, encoder and decoder in DETR with Mobile-Former, which outperforms DETR by 1.1 AP but saves 52{\textbackslash}\% of computational cost and 36{\textbackslash}\% of parameters.},
 	urldate = {2023-03-19},
 	publisher = {arXiv},
 	author = {Chen, Yinpeng and Dai, Xiyang and Chen, Dongdong and Liu, Mengchen and Dong, Xiaoyi and Yuan, Lu and Liu, Zicheng},
@@ -1782,14 +1766,12 @@
 	year = {2022},
 	note = {arXiv:2108.05895 [cs]},
 	keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/8F4Z9DR4/Chen et al. - 2022 - Mobile-Former Bridging MobileNet and Transformer.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/TUEYPXT2/2108.html:text/html},
 }
 
 @misc{ganin_unsupervised_2015,
 	title = {Unsupervised {Domain} {Adaptation} by {Backpropagation}},
 	url = {http://arxiv.org/abs/1409.7495},
 	doi = {10.48550/arXiv.1409.7495},
-	abstract = {Top-performing deep architectures are trained on massive amounts of labeled data. In the absence of labeled data for a certain task, domain adaptation often provides an attractive option given that labeled data of similar nature but from a different domain (e.g. synthetic images) are available. Here, we propose a new approach to domain adaptation in deep architectures that can be trained on large amount of labeled data from the source domain and large amount of unlabeled data from the target domain (no labeled target-domain data is necessary). As the training progresses, the approach promotes the emergence of "deep" features that are (i) discriminative for the main learning task on the source domain and (ii) invariant with respect to the shift between the domains. We show that this adaptation behaviour can be achieved in almost any feed-forward model by augmenting it with few standard layers and a simple new gradient reversal layer. The resulting augmented architecture can be trained using standard backpropagation. Overall, the approach can be implemented with little effort using any of the deep-learning packages. The method performs very well in a series of image classification experiments, achieving adaptation effect in the presence of big domain shifts and outperforming previous state-of-the-art on Office datasets.},
 	urldate = {2023-03-25},
 	publisher = {arXiv},
 	author = {Ganin, Yaroslav and Lempitsky, Victor},
@@ -1797,5 +1779,24 @@
 	year = {2015},
 	note = {arXiv:1409.7495 [cs, stat]},
 	keywords = {Computer Science - Machine Learning, Computer Science - Neural and Evolutionary Computing, Statistics - Machine Learning},
-	file = {arXiv Fulltext PDF:/home/moritz/snap/zotero-snap/common/Zotero/storage/AXIENMWU/Ganin and Lempitsky - 2015 - Unsupervised Domain Adaptation by Backpropagation.pdf:application/pdf;arXiv.org Snapshot:/home/moritz/snap/zotero-snap/common/Zotero/storage/MX2T3IBS/1409.html:text/html},
+}
+
+@misc{pytorch_contributors_unfold_nodate,
+	title = {Unfold — {PyTorch} 2.0 documentation},
+	url = {https://pytorch.org/docs/stable/generated/torch.nn.Unfold.html},
+	urldate = {2023-04-03},
+	author = {Pytorch Contributors},
+}
+
+@misc{radford_unsupervised_2016,
+	title = {Unsupervised {Representation} {Learning} with {Deep} {Convolutional} {Generative} {Adversarial} {Networks}},
+	url = {http://arxiv.org/abs/1511.06434},
+	doi = {10.48550/arXiv.1511.06434},
+	urldate = {2023-04-03},
+	publisher = {arXiv},
+	author = {Radford, Alec and Metz, Luke and Chintala, Soumith},
+	month = jan,
+	year = {2016},
+	note = {arXiv:1511.06434 [cs]},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning},
 }
