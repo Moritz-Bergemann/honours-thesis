@@ -112,9 +112,7 @@
     \textbf{Abstract}
 \end{center}
 
-Abstract goes here.
-
-Semantic segmentation is a core task in computer vision. Due to its complexity, it is also one of the least accessible and complex to apply.
+Semantic segmentation is a core task in computer vision. Due to its complexity, it is also one of the least accessible and most challenging to apply. In this work, we explore distinct aspects of implementing effective semantic segmentation in real-world scenarios. In the application space, we produce SC-CrackSeg, a lightweight model optimised for the domain-specific crack segmentation task, and explore the impact of aspects of its architecture. We further make novel contributions to the unsupervised domain adaptation (UDA) field for semantic segmentation. We assess the unexplored field of domain-adversarial training for segmentation transformers and uncover previously unseen complexities due to the advanced and flexible nature of transformers. We also explore the rarely-discussed field of UDA for efficient semantic segmentation models, key for applications with limited training data and computing resources. Here, our autolabelling-like Pseudo-Teacher achieves 61.18\% mIoU on GTA \textrightarrow CS (91.92\% of oracle performance), approaching the state-of-the-art while requiring orders of magnitude less compute.
 
 \newpage
 \chapter*{Acknowledgements}
@@ -167,7 +165,7 @@ This section includes a general review of semantic segmentation relevant to the 
 As with most computer vision applications, deep convolutional neural networks (CNNs) traditionally achieved state-of-the-art results on semantic segmentation tasks for accuracy and efficiency. The superior performance of CNNs is often cited to be due to their possession of vision-specific inductive biases. Translational equivariance means that patterns present anywhere in an image will be extracted in the same way due to the constant convolution kernel that “slides” across the input. Locality means that CNNs, due to the limited size of each kernel, will inherently put stronger weights towards input features that are closer together in 2D space (figure ~\ref{fig:receptive_field}) \cite{zhang_dive_2019}. All of this is achieved with fixed-size kernels, meaning the number of parameters that must be trained for any model does not increase with image size. Novel advances in general computer vision are typically first made on the simpler image classification task, then transferred to other tasks like segmentation.
 
 
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[scale=0.7]{res/convolution.png}
     \caption{A single step in the 2D convolution of an input tensor with a kernel \cite{zhang_dive_2019}. The next stage would be the computation of $25$ via $1 \times 0 + 2 \times 1 + 4 \times 2 + 5 \times 3$.}
@@ -688,8 +686,9 @@ We here describe the experimental setup for Domain Adversarial SegFormer (DAS). 
 
 We train both models in an end-to-end manner using a gradient reversal layer (GRL) \cite{ganin_domain-adversarial_2016}. The gradient is reversed at the beginning of the feature extractor, meaning backpropagation can simply be performed on $\mathcal{L}_{seg} + \mathcal{L}_{disc}$. This will encourage the discriminator to minimise domain classification error, while, upon gradient reversal, encouraging the segmentation model to maximise the domain classification error. The adaptation factor $\lambda$ scales the gradient as it moves through the GRLs - this can be used to reduce the effect of the discriminator loss on the segmentation model while still allowing the discriminator to learn effectively.
 
-\pagebreak
-% \hspace*{4mm}
+% \pagebreak
+% \hspace*{1mm}
+\bigbreak
 \begin{lstlisting}[language=Python, caption=Gradient reversal function implemented in PyTorch \cite{paszke_pytorch_2019}. Based on \url{https://github.com/tadeephuy/GradientReversal}]
 class GradientReversalFunction(Function):
     """Gradient reversal function. Acts as identity transform during forward pass, 
@@ -787,7 +786,7 @@ Applying the same principle as with the patch-wise discriminator, we follow an a
 \subsubsection{Multi level discriminator ensemble}
 As many approaches establish \cite{hoffman_fcns_2016} \cite{bermudez-chacon_domain-adaptive_2018}, the complexity of the semantic segmentation task means aligning features at a single point is often insufficient. Therefore, we deploy multiple combinations of different discriminators at multiple levels throughout the model. This includes multiple feature-level discriminators and a feature-level and output-level discriminator combination, similar to \cite{tsai_learning_2020}. Discriminator choices are based on the most successful configurations in previous experiments.
 
-\subsubsection{Class-wise discriminator}
+\subsubsection{Fine class-wise discriminator}
 To combat the marginalisation of classes, we apply an approach similar to FADA \cite{wang_classes_2020}, making predictions not only on domain but also classes within the domain. This involves constructing fine domain labels from the segmentation head output to be passed to the discriminator (figure \ref{fig:das-discriminators-fada}).
 
 \bigbreak
@@ -849,7 +848,7 @@ Another way of encouraging the model to predict rare classes is by increasing th
 Where $c$ is the class, $f_c$ is the frequency of the class, $C$ is the number of classes, and $T$ is a temperature hyperparameter, which we set to $0.01$.
 
 \section{Experimental Results}
-We use PyTorch 1.8 in an Ubuntu server with a single 2080Ti for all experiments. All experiments use a learning rate of $6 \times 10^{-5}$.
+We use PyTorch 1.8 in an Ubuntu server with a single 2080Ti for all experiments. All experiments use a learning rate of $6 \times 10^{-5}$. All experimental results are on the Cityscapes validation dataset.
 
 
 \subsection{Initial Results and Experimentation}
@@ -903,25 +902,6 @@ Many papers in the semantic segmentation space do not use gradient reversal, but
 
 We assess all discriminator architectures using the same adaptation factor growth settings. Specific configuration information can be seen in table \ref{tab:das-disc-configurations}.
 
-\begin{table}[]
-    \centering
-    \resizebox{!}{0.35\paperheight}{%
-        \begin{tabular}{|l|l|}
-            \hline
-            \textbf{Discriminator}                 & \textbf{Specific layout}                                                                                                                                                                                                                                                                                                                                                                                                                                           \\ \hline
-            Linear                                 & \begin{tabular}[c]{@{}l@{}}Linear Layer ($F$ input to 768 output channels)\\ ReLU\\ LInear Layer (768 input to 768 output channels)\\ ReLU\\ Pointwise Convolutional Layer (768 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                  \\ \hline
-            Convolutional                          & \begin{tabular}[c]{@{}l@{}}Convolutional Layer ($F$ input to 32 output channels)\\ Convolutional Layer (32 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                                                                                       \\ \hline
-            DCGAN \cite{radford_unsupervised_2016} & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($C$ input channels, 64 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 128 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (128 input channels, 256 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (256 input channels, 512 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 2 output channels, stride 2)\\ Global average pooling\\ Sigmoid\end{tabular} \\ \hline
-            patch-wise                             & \begin{tabular}[c]{@{}l@{}}256 patches:\\ Linear layer (512 input channels, 512 // 4 = 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 2 output channels)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                                                          \\ \hline
-            Unique patch-wise                      & Same as patch-wise                                                                                                                                                                                                                                                                                                                                                                                                                                                 \\ \hline
-            Conv patch-wise                        & \begin{tabular}[c]{@{}l@{}}16 * 16 = 256 patches\\ Conv. Layer ($C$ input channels, 32 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (32 input channels, 64 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 2 output channels, stride 1)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                         \\ \hline
-            FADA \cite{wang_classes_2020}          & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($F$ input channels, 512 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 256 output channels, stride 1)\\ Leaky ReLU\\ 2 $\times$ Conv. Layer (256 input channels, $C$ output channels, stride 1)\\ Concatenate previous 2 channels\end{tabular}                                                                                                                                                 \\ \hline
-        \end{tabular}
-    }
-    \caption{Specific configuration of DAS discriminators. $C$ denotes number of classes, $F$ denotes feature depth.}
-    \label{tab:das-disc-configurations}
-\end{table}
-
 \subsubsection{Individual Discriminators}
 Unfortunately, all tested discriminators were unable to surpass the baseline performance of SegFormer-MiTB3. Some discriminators had significantly less negative effects than others. The patch-wise discriminators performed strongest, which may be as its focus on individual patches minimally marginalises the overall distribution. However, the unique patch-wise discriminator only performed very slightly better than the patch-wise using the same weights for all patches, indicating avoiding marginalisation at this level is not relevant to domain transfer. Linear discriminators also performed strongly, suggesting discriminators aligned with the structure of the remaining model may be beneficial. The patch-wise discriminator mirrors the SegFormer blocks, while the linear discriminator is modelled after SegFormer's decoder. Surprisingly, the convolutional patch-wise discriminator performed extremely poorly, unlike its feature patch-wise counterpart. Investigation found no implementation issues, and integrated evaluation metrics show the discriminator is predicting accurately (~80\% accuracy).
 
@@ -943,7 +923,7 @@ Unfortunately, all tested discriminators were unable to surpass the baseline per
 \subsubsection{Ensemble methods}
 Our ensembles consisted of a feature-level ensemble (using patch discriminators) and a feature-output level ensemble, using patch and DCGAN-like discriminators. Following \cite{tsai_learning_2020}, we deploy discriminators in the final 2 layers of the model. For memory-related reasons, the DCGAN discriminator was reduced in size.
 
-\begin{table}[]
+\begin{table}[h]
     \centering
     \begin{tabular}{|l|r|}
         \hline
@@ -955,6 +935,25 @@ Our ensembles consisted of a feature-level ensemble (using patch discriminators)
 \end{table}
 
 Surprisingly, ensemble methods did not outperform their individual counterparts, and in fact performed worse. We expected the ensembles to aid in the alignment of the overall feature space as in previous approaches \cite{hoffman_fcns_2016} \cite{chen_learning_2017}, but found this not to be the case. This may be as the issue of class-level alignment or dynamic feature marginalisation is present at a deeper level.
+
+\begin{table}[]
+    \centering
+    \resizebox{!}{0.35\paperheight}{%
+        \begin{tabular}{|l|l|}
+            \hline
+            \textbf{Discriminator}                 & \textbf{Specific layout}                                                                                                                                                                                                                                                                                                                                                                                                                                           \\ \hline
+            Linear                                 & \begin{tabular}[c]{@{}l@{}}Linear Layer ($F$ input to 768 output channels)\\ ReLU\\ LInear Layer (768 input to 768 output channels)\\ ReLU\\ Pointwise Convolutional Layer (768 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                  \\ \hline
+            Convolutional                          & \begin{tabular}[c]{@{}l@{}}Convolutional Layer ($F$ input to 32 output channels)\\ Convolutional Layer (32 input to 2 output channels)\\ Global average pooling\end{tabular}                                                                                                                                                                                                                                                                                       \\ \hline
+            DCGAN \cite{radford_unsupervised_2016} & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($C$ input channels, 64 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 128 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (128 input channels, 256 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (256 input channels, 512 output channels, stride 2)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 2 output channels, stride 2)\\ Global average pooling\\ Sigmoid\end{tabular} \\ \hline
+            patch-wise                             & \begin{tabular}[c]{@{}l@{}}256 patches:\\ Linear layer (512 input channels, 512 // 4 = 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 128 output channels)\\ ReLU\\ Linear layer (128 input channels, 2 output channels)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                                                          \\ \hline
+            Unique patch-wise                      & Same as patch-wise                                                                                                                                                                                                                                                                                                                                                                                                                                                 \\ \hline
+            Conv patch-wise                        & \begin{tabular}[c]{@{}l@{}}16 * 16 = 256 patches\\ Conv. Layer ($C$ input channels, 32 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (32 input channels, 64 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (64 input channels, 2 output channels, stride 1)\\ Global average pooling\\ Sigmoid\end{tabular}                                                                                                                                         \\ \hline
+            FADA \cite{wang_classes_2020}          & \begin{tabular}[c]{@{}l@{}}Conv. Layer ($F$ input channels, 512 output channels, stride 1)\\ Leaky ReLU\\ Conv. Layer (512 input channels, 256 output channels, stride 1)\\ Leaky ReLU\\ 2 $\times$ Conv. Layer (256 input channels, $C$ output channels, stride 1)\\ Concatenate previous 2 channels\end{tabular}                                                                                                                                                 \\ \hline
+        \end{tabular}
+    }
+    \caption{Specific configuration of DAS discriminators. $C$ denotes number of classes, $F$ denotes feature depth.}
+    \label{tab:das-disc-configurations}
+\end{table}
 
 \subsection{Auxiliary approaches}
 We keep the loss factor for class distribution loss large (1.0) as the loss produced by the function itself is small. Due to memory restrictions, we were forced to use the simpler DCGAN disc instead of patch-wise discriminators for this stage.
@@ -1032,7 +1031,7 @@ Little research has been published exploring the usage of efficient neural netwo
 
 While the power of large vision transformers such as ViT and SegFormer trained on larger datasets is established, these properties do not properly present themselves in highly resource-constrained contexts, where the direct inductive biases of CNNs appear to win out. For instance, \cite{mehta_mobilevit_2022} identified a version of DEiT \cite{touvron_training_2021} with only around 6 million parameters, is outperformed by the traditional CNN-based MobileNetV3 \cite{howard_searching_2019}. Therefore, recent attempts have been made to produce lightweight transformer-based computer vision models, typically by combining the efficiency and inductive biases of CNNs with the strong global learning capability of transformers.
 
-MobileViT \cite{mehta_mobilevit_2022} is an early popular approach, which introduces CNN-like inductive biases into transformer vision models to achieve lightweight inference. MobileViT, similar to SegFormer \cite{xie_segformer_2021}, has each block's input and output be in the form of a $\mathbb{R}^{H \times W \times C}$ tensor (where $H$ is height, $W$ is width, and $C$ is channels). However, instead of performing patch embedding, MobileViT blocks first use pointwise convolutions to transform input into a high-dimensional space $\mathbb{R}^{H \times W \times d}, d > C$, then unfold it into a $\mathbb{R}^{P \times N \times d}$ tensor, (where $P$ is product of patch dimensions $h \times w$ and $N$ is the patch number). Attention is then applied along individual pixels of each patch block (figure \ref{fig:mobilevit_block}) before refolding to $\mathbb{R}^{H \times W \times D}$. This process of unfolding, folding, and processing, mirrors the same process that occurs during standard convolutions \cite{pytorch_contributors_unfold_nodate}, transferring over the inductive biases of the operation while applying global receptive field. MobileViT outperforms may state-of-the-art CNNs and transformer networks while possessing few parameters, using DeeplabV3's ASPP head \cite{chen_rethinking_2017} for segmentation output. It was also found to improve generalisability, the ability to perform on unseen datasets, compared to similarly-scaled transformer models.
+MobileViT \cite{mehta_mobilevit_2022} is an early popular approach, which introduces CNN-like inductive biases into transformer vision models to achieve lightweight inference. MobileViT, similar to SegFormer \cite{xie_segformer_2021}, has each block's input and output be in the form of a $\mathbb{R}^{H \times W \times C}$ tensor (where $H$ is height, $W$ is width, and $C$ is channels). However, instead of performing patch embedding, MobileViT blocks first use pointwise convolutions to transform input into a high-dimensional space $\mathbb{R}^{H \times W \times d}, d > C$, then unfold it into a $\mathbb{R}^{P \times N \times d}$ tensor, (where $P$ is product of patch dimensions $h \times w$ and $N$ is the patch number). Attention is then applied along individual pixels of each patch block (figure \ref{fig:mobilevit_block}) before refolding to $\mathbb{R}^{H \times W \times D}$. This process of unfolding, folding, and processing, mirrors the same process that occurs during standard convolutions \cite{contributors_unfold_nodate}, transferring over the inductive biases of the operation while applying global receptive field. MobileViT outperforms may state-of-the-art CNNs and transformer networks while possessing few parameters, using DeeplabV3's ASPP head \cite{chen_rethinking_2017} for segmentation output. It was also found to improve generalisability, the ability to perform on unseen datasets, compared to similarly-scaled transformer models.
 
 \begin{figure}[t!]
     \centering
@@ -1047,6 +1046,8 @@ Other approaches seeking efficiency combine CNNs and transformers more directly.
 
 
 \section{Baseline Experiments}
+Note all experimental results in this chapter are on the Cityscapes validation dataset.
+
 In order to explore efficient segmentation UDA, we apply existing methods to common state-of-the-art efficient segmentation networks. For our experiments, we specifically use Fast-SCNN \cite{poudel_fast-scnn_2019} as an example of an extremely lightweight CNN, and MobileViT \cite{mehta_mobilevit_2022} and TopFormer \cite{zhang_topformer_2022} as lightweight transformer models we expect to be more domain-adaptive. We also assess on the most light-weight possible versions of SegFormer and DAFormer, using the MiT-B0 backbone. Since DAFormer does not include a decoder for the MiT-B0 backbone, we follow SegFormer and produce one by halving channel depths in its decoder. For all experiments in this chapter, we use a batch size of 4 permitted by the increase in available memory. Wherever possible, learning rates and other hyperparameters follow the original papers.
 
 We first compare source-only performance. Fast-SCNN performs poorly, indicating its lightweight, CNN-based architecture is not suitable for retaining complex domain-independent features. The lack of pre-training (as \cite{poudel_fast-scnn_2019} identify it does not improve model performance) may further extrapolate this. As expected, MobileViT and TopFormer both perform significantly more strongly, though their computing cost (FLOPs and parameters) is non-negligibly higher.
@@ -1114,24 +1115,24 @@ Our Pseudo-Teacher method follows this approach by having the student learn from
 Many existing approaches are similar to our pseudo-teacher UDA. Knowledge distillation involves using the soft outputs of a larger model to train a smaller one, with the soft outputs allowing the small model to learn how to represent features. An industry approach sometimes known as autolabelling involves using a pre-trained neural network to predict on many unlabelled samples, then manually adjusting these samples to quickly produce large datasets. However, our approach does not use soft labels for simplicity, and is targeted specifically at teaching domain-adapted features.
 
 \subsection{Experimental Results}
-As TopFormer was the best efficient network for source-only training (and our pseudo-teacher UDA does not involve other means of UDA), we opted to use it for our experiments. As with other UDA tasks, we do not allow our model, including the teacher model, to see validation set images during training.
+As TopFormer was the best efficient network for source-only training (and our pseudo-teacher UDA does not involve other means of UDA), we opted to use it for our experiments. As with other UDA tasks, we do not allow our model, including the teacher model, to see validation set images during training. For our pseudo-teacher, we use DAFormer-B5 with the same experimental settings as outlined in the DAFormer paper \cite{hoyer_daformer_2022}.
 
 \begin{table}[h]
     \resizebox{\textwidth}{!}{%
         \begin{tabular}{|l|l|r|r|r|r|}
             \hline
-            Model             & Approach       & \multicolumn{1}{l|}{Source-Only} & \multicolumn{1}{l|}{With UDA} & \multicolumn{1}{l|}{Oracle} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Relative \\ Performance\end{tabular}} \\ \hline
+            Model             & UDA Approach       & \multicolumn{1}{l|}{Source-Only} & \multicolumn{1}{l|}{With UDA} & \multicolumn{1}{l|}{Oracle} & \multicolumn{1}{l|}{\begin{tabular}[c]{@{}l@{}}Relative \\ Performance\end{tabular}} \\ \hline
             TopFormer-Base    & Pseudo-Teacher & \textbf{33.32}                   & \textbf{61.18}                & 66.56                       & 91.92\%                                                                              \\ \hline
             TopFormer-Tiny    & Pseudo-Teacher & 27.78                            & 56.26                         & 59.39                       & \textbf{94.73\%}                                                                     \\ \hline
             DAFormer (MiT-B0) & Self-Training  & 28.12                            & 47.55                         & \textbf{70.78}              & 67.18\%                                                                              \\ \hline
         \end{tabular}
     }
-    \caption{Results of Pseudo-Teacher UDA on GTA \textrightarrow CS}
+    \caption{Results of Pseudo-Teacher UDA on GTA \textrightarrow CS. All performance values are in \% mIoU}
 \end{table}
 
 TopFormer's pseudo-teacher results are extremely impressive. With only ImageNet pre-training, TopFormer is able to achieve 61.18\% mean IoU using the teacher labels, an almost 40\% improvement over performing direct self-training with the most lightweight DAFormer. It achieves all this while still possessing significantly fewer parameters (figure \ref{tab:lightweit-da-baseline}). TopFormer-Tiny also sees an incredible jump in performance, and both models achieve results near 90\% of those we observe when the training set is made available. This indicates that, even though the DAFormer-B5 teacher only achieves 68.3\% mIoU on the dataset itself, the smaller models are able to accurately learn the most relevant information to achieve similar results. In the qualitative results, the efficient model's ability to mirror fine details like signs and traffic lights is significantly of note, something efficient models previously struggled with in UDA..
 
-\begin{table}[]
+\begin{table}[hb]
     \resizebox{\textwidth}{!}{%
         \begin{tabular}{lllll}
             \centering
